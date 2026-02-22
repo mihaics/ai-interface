@@ -8,7 +8,7 @@ import { calculateRoute } from '../tools/routing.js';
 import { webSearch } from '../tools/webSearch.js';
 import { fetchPage } from '../tools/fetchPage.js';
 import { prepareCodeExec } from '../tools/codeExec.js';
-import { readSessionFile, writeSessionFile } from '../tools/fileOps.js';
+import { readSessionFile, writeSessionFile, listSessionFiles } from '../tools/fileOps.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
 let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
@@ -69,6 +69,10 @@ async function executeTool(name: string, input: Record<string, any>, sessionId: 
     case 'write_file': {
       const result = await writeSessionFile(sessionId, input.filename, input.content);
       return JSON.stringify(result);
+    }
+    case 'list_session_files': {
+      const files = await listSessionFiles(sessionId);
+      return JSON.stringify(files);
     }
     case 'render_component':
     case 'show_notification':
