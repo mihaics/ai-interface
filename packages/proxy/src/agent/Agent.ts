@@ -268,14 +268,20 @@ document.getElementById('output').textContent = _log.join('\\n');
     await pyodide.loadPackagesFromImports(${JSON.stringify(code)});
     out.textContent = '';
     pyodide.setStdout({ batched: (text) => { out.textContent += text + '\\n'; }});
-    pyodide.setStderr({ batched: (text) => { out.textContent += text + '\\n'; }});
+    const stderrFilter = /font cache|non-interactive|cannot be shown/i;
+    pyodide.setStderr({ batched: (text) => {
+      if (!stderrFilter.test(text)) out.textContent += text + '\\n';
+    }});
 
-    // Redirect matplotlib to inline SVG
+    // Redirect matplotlib to inline SVG, suppress warnings
     await pyodide.runPythonAsync(\`
-import sys, io
+import sys, io, warnings
+warnings.filterwarnings('ignore')
 try:
     import matplotlib
     matplotlib.use('agg')
+    import matplotlib.pyplot as plt
+    plt.show = lambda *a, **k: None
 except ImportError:
     pass
 \`);
