@@ -66,6 +66,18 @@ export function App() {
     try { sessionStorage.setItem('chat_messages', JSON.stringify(messages)); } catch {}
   }, [messages]);
 
+  // Auto-remove code execution windows that error out
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'code_exec_error' && e.data.component_id) {
+        sandboxRegistryRef.current.unregister(e.data.component_id);
+        setComponents(prev => prev.filter(c => c.component_id !== e.data.component_id));
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
   const addNotification = useCallback((type: Notification['type'], message: string) => {
     const id = crypto.randomUUID();
     setNotifications(prev => [...prev, { id, type, message }]);

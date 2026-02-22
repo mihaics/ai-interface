@@ -215,7 +215,10 @@ console.log = (...a) => { _log.push(a.map(String).join(' ')); _origLog(...a); };
 try {
   const _result = eval(${JSON.stringify(code)});
   if (_result !== undefined) _log.push(String(_result));
-} catch(e) { _log.push('Error: ' + e.message); }
+} catch(e) {
+  _log.push('Error: ' + e.message);
+  parent.postMessage({ type: 'code_exec_error', component_id: COMPONENT_ID, error: e.message }, '*');
+}
 document.getElementById('output').textContent = _log.join('\\n');
 </script></div>`;
   }
@@ -231,6 +234,7 @@ document.getElementById('output').textContent = _log.join('\\n');
 (async () => {
   try {
     const pyodide = await loadPyodide();
+    await pyodide.loadPackagesFromImports(${JSON.stringify(code)});
     pyodide.setStdout({ batched: (text) => {
       const el = document.getElementById('output');
       if (el.textContent === 'Loading Pyodide...') el.textContent = '';
@@ -251,6 +255,7 @@ document.getElementById('output').textContent = _log.join('\\n');
     }
   } catch(e) {
     document.getElementById('output').textContent = 'Error: ' + e.message;
+    parent.postMessage({ type: 'code_exec_error', component_id: COMPONENT_ID, error: e.message }, '*');
   }
 })();
 </script></div>`;

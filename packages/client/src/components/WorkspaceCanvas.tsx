@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { SandboxFrame } from './SandboxFrame.js';
 import type { UIComponentPayload } from '@ai-interface/shared';
 import type { SandboxRegistry } from '../core/SandboxRegistry.js';
@@ -176,6 +176,22 @@ export function WorkspaceCanvas({ components, sandboxRegistry, onRemoveComponent
     [sandboxRegistry],
   );
 
+  // Bring window to front when its iframe is clicked.
+  // Iframes swallow pointer events, so we detect focus transfer via window blur.
+  useEffect(() => {
+    const onBlur = () => {
+      requestAnimationFrame(() => {
+        const el = document.activeElement;
+        if (!(el instanceof HTMLIFrameElement)) return;
+        const wrapper = el.closest('[data-window-id]');
+        const id = wrapper?.getAttribute('data-window-id');
+        if (id) bringToFront(id);
+      });
+    };
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, [bringToFront]);
+
   const minimizedWindows = activeWindows.filter(w => w.minimized);
   const visibleWindows = activeWindows.filter(w => !w.minimized);
 
@@ -220,6 +236,7 @@ export function WorkspaceCanvas({ components, sandboxRegistry, onRemoveComponent
         return (
           <div
             key={win.id}
+            data-window-id={win.id}
             style={{
               position: 'absolute',
               left: win.x, top: win.y, width: win.w, height: win.h,
