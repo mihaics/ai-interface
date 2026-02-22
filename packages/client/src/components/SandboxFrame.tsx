@@ -11,9 +11,9 @@ interface SandboxFrameProps {
  * Renders an agent-generated UI component inside a sandboxed iframe.
  *
  * Security properties:
- * - sandbox="allow-scripts" only (no same-origin, no forms, no popups)
- * - CSP via meta tag inside srcDoc
- * - No network access (connect-src 'none')
+ * - sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" (no same-origin, no forms)
+ * - CSP allows any HTTPS CDN for scripts/styles (maximum LLM freedom)
+ * - Security boundary is the sandbox attribute, not CSP
  * - Only escape hatch is postMessage to parent
  */
 export function SandboxFrame({ component, onLoad, onError }: SandboxFrameProps) {
@@ -57,7 +57,7 @@ function buildSrcDoc(component: UIComponentPayload): string {
   <meta charset="utf-8">
   <base target="_blank" rel="noopener noreferrer">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://unpkg.com; img-src https: data: blob:; connect-src https: blob:; worker-src blob:;">
+    content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' https:; font-src https: data:; img-src https: data: blob:; connect-src https: blob: data:; worker-src blob:; media-src https: blob: data:;">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; overflow: auto; }

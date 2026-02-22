@@ -10,6 +10,7 @@ import cors from 'cors';
 import { sessionRouter } from './routes/session.js';
 import { mcpRouter } from './routes/mcp.js';
 import { uploadRouter } from './routes/upload.js';
+import { fetchPdfRouter } from './routes/fetchPdf.js';
 import { filesRouter } from './routes/files.js';
 import { validateSession } from './middleware/validateSession.js';
 import { rateLimit } from './middleware/rateLimit.js';
@@ -36,6 +37,9 @@ app.use('/api/mcp', mcpRouter);
 
 // File upload (protected, under MCP path)
 app.use('/api/mcp', uploadRouter);
+
+// PDF proxy (protected, under MCP path)
+app.use('/api/mcp', fetchPdfRouter);
 
 // File download (public, file path is the auth)
 app.use('/api', filesRouter);

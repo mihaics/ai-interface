@@ -224,37 +224,69 @@ document.getElementById('output').textContent = _log.join('\\n');
   }
 
   // Python via Pyodide
-  return `<div style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
-<h3 style="color:#888;margin:0 0 8px">Python</h3>
-<pre style="background:#111;padding:12px;border-radius:4px;margin:0 0 8px;overflow-x:auto"><code>${escaped}</code></pre>
-<h3 style="color:#888;margin:0 0 8px">Output</h3>
-<pre id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto">Loading Pyodide...</pre>
+  return `<div id="container" style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
+<details style="margin:0 0 8px">
+<summary style="color:#888;cursor:pointer;font-size:14px">Python Source</summary>
+<pre style="background:#111;padding:12px;border-radius:4px;margin:4px 0 0;overflow-x:auto"><code>${escaped}</code></pre>
+</details>
+<div id="output-label" style="color:#888;margin:0 0 8px;font-size:14px">Output</div>
+<div id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto;white-space:pre-wrap">Loading Pyodide...</div>
+<div id="visual" style="margin-top:12px"></div>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
 <script>
 (async () => {
+  const out = document.getElementById('output');
+  const vis = document.getElementById('visual');
   try {
+    out.textContent = 'Loading Pyodide...';
     const pyodide = await loadPyodide();
+    out.textContent = 'Installing packages...';
     await pyodide.loadPackagesFromImports(${JSON.stringify(code)});
-    pyodide.setStdout({ batched: (text) => {
-      const el = document.getElementById('output');
-      if (el.textContent === 'Loading Pyodide...') el.textContent = '';
-      el.textContent += text + '\\n';
-    }});
-    pyodide.setStderr({ batched: (text) => {
-      const el = document.getElementById('output');
-      el.textContent += text + '\\n';
-    }});
+    out.textContent = '';
+    pyodide.setStdout({ batched: (text) => { out.textContent += text + '\\n'; }});
+    pyodide.setStderr({ batched: (text) => { out.textContent += text + '\\n'; }});
+
+    // Redirect matplotlib to inline SVG
+    await pyodide.runPythonAsync(\`
+import sys, io
+try:
+    import matplotlib
+    matplotlib.use('agg')
+except ImportError:
+    pass
+\`);
+
     const result = await pyodide.runPythonAsync(${JSON.stringify(code)});
-    if (result !== undefined && result !== null) {
-      const el = document.getElementById('output');
-      if (el.textContent === 'Loading Pyodide...') el.textContent = '';
-      el.textContent += String(result);
+
+    // Check for matplotlib figures
+    try {
+      const svg = await pyodide.runPythonAsync(\`
+try:
+    import matplotlib.pyplot as plt
+    figs = [plt.figure(i) for i in plt.get_fignums()]
+    svgs = []
+    for fig in figs:
+        buf = io.BytesIO()
+        fig.savefig(buf, format='svg', bbox_inches='tight', facecolor='#1a1a2e', edgecolor='none')
+        buf.seek(0)
+        svgs.append(buf.read().decode('utf-8'))
+        plt.close(fig)
+    '\\n'.join(svgs) if svgs else ''
+except ImportError:
+    ''
+\`);
+      if (svg) vis.innerHTML = svg;
+    } catch(_) {}
+
+    if (result !== undefined && result !== null && String(result).trim()) {
+      if (!out.textContent.trim()) out.textContent = '';
+      out.textContent += String(result);
     }
-    if (document.getElementById('output').textContent === 'Loading Pyodide...') {
-      document.getElementById('output').textContent = '(no output)';
+    if (!out.textContent.trim() && !vis.innerHTML.trim()) {
+      out.textContent = '(no output)';
     }
   } catch(e) {
-    document.getElementById('output').textContent = 'Error: ' + e.message;
+    out.textContent = 'Error: ' + e.message;
     parent.postMessage({ type: 'code_exec_error', component_id: COMPONENT_ID, error: e.message }, '*');
   }
 })();

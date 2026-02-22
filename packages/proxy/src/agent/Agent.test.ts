@@ -28,8 +28,8 @@ describe('agent setup', () => {
     expect(SYSTEM_PROMPT).toContain('code execution');
     expect(SYSTEM_PROMPT).toContain('render_component');
     expect(SYSTEM_PROMPT).toContain('COMPONENT_ID');
-    expect(SYSTEM_PROMPT).toContain('data_table');
-    expect(SYSTEM_PROMPT).toContain('code_output');
+    expect(SYSTEM_PROMPT).toContain('Data tables');
+    expect(SYSTEM_PROMPT).toContain('execute_code');
   });
 
   it('render_component tool accepts html', () => {
