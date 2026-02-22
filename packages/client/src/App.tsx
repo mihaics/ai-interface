@@ -202,6 +202,7 @@ export function App() {
           onSend={handleSend}
           onUpload={handleUpload}
           isLoading={isLoading}
+          activeComponentTypes={components.map(c => c.metadata.component_type)}
         />
       </div>
 

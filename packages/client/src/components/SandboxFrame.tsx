@@ -58,6 +58,21 @@ function buildSrcDoc(component: UIComponentPayload): string {
   <base target="_blank" rel="noopener noreferrer">
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' https:; font-src https: data:; img-src https: data: blob:; connect-src https: blob: data:; worker-src blob:; media-src https: blob: data:;">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://esm.sh/three",
+      "three/": "https://esm.sh/three/",
+      "chart.js": "https://esm.sh/chart.js",
+      "chart.js/auto": "https://esm.sh/chart.js/auto",
+      "d3": "https://esm.sh/d3",
+      "mermaid": "https://esm.sh/mermaid",
+      "marked": "https://esm.sh/marked",
+      "lodash": "https://esm.sh/lodash-es",
+      "canvas-confetti": "https://esm.sh/canvas-confetti"
+    }
+  }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; overflow: auto; }

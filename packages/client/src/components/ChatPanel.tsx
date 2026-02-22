@@ -11,11 +11,89 @@ interface ChatPanelProps {
   onSend: (message: string) => void;
   onUpload?: (file: File) => void;
   isLoading: boolean;
+  activeComponentTypes?: string[];
 }
 
 export type { ChatMessage };
 
-export function ChatPanel({ messages, onSend, onUpload, isLoading }: ChatPanelProps) {
+const INITIAL_SUGGESTIONS = [
+  'Search for latest AI news',
+  'Show a 3D globe with major cities',
+  'Build an interactive periodic table',
+  'Find cafes near me on a map',
+];
+
+const CONTEXTUAL_SUGGESTIONS: Record<string, string[]> = {
+  map_view: [
+    'Add nearby restaurants to the map',
+    'Calculate a walking route',
+    'Show public transport stops',
+  ],
+  data_table: [
+    'Create a chart from this data',
+    'Sort and filter this table',
+    'Analyze trends in this data',
+  ],
+  chart: [
+    'Change the chart type',
+    'Compare with another dataset',
+    'Explain what this chart shows',
+  ],
+  web_page: [
+    'Summarize this article',
+    'Find similar articles',
+    'Search for more on this topic',
+  ],
+  code_output: [
+    'Add a visualization to this',
+    'Optimize this code',
+    'Run with different parameters',
+  ],
+  pdf_viewer: [
+    'Summarize this PDF',
+    'Extract key points',
+    'Search for related documents',
+  ],
+};
+
+const GENERIC_FOLLOWUPS = [
+  'Show this as a different visualization',
+  'Search the web for more info',
+  'Write Python code to analyze this',
+  'Fetch and display a web page',
+];
+
+function getSuggestions(componentTypes: string[]): string[] {
+  if (componentTypes.length === 0) return INITIAL_SUGGESTIONS;
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  // Add contextual suggestions for active component types
+  for (const type of componentTypes) {
+    const matches = CONTEXTUAL_SUGGESTIONS[type];
+    if (matches) {
+      for (const s of matches) {
+        if (!seen.has(s) && result.length < 4) {
+          seen.add(s);
+          result.push(s);
+        }
+      }
+    }
+  }
+
+  // Fill remaining slots with generic follow-ups
+  for (const s of GENERIC_FOLLOWUPS) {
+    if (!seen.has(s) && result.length < 4) {
+      seen.add(s);
+      result.push(s);
+    }
+  }
+
+  return result;
+}
+
+export function ChatPanel({ messages, onSend, onUpload, isLoading, activeComponentTypes = [] }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,12 +108,7 @@ export function ChatPanel({ messages, onSend, onUpload, isLoading }: ChatPanelPr
     setInput('');
   };
 
-  const suggestions = [
-    'Search for latest AI news',
-    'Find cafes in Amsterdam',
-    'Analyze this CSV data',
-    'Explain quantum computing',
-  ];
+  const suggestions = getSuggestions(activeComponentTypes);
 
   return (
     <div style={{
@@ -86,24 +159,25 @@ export function ChatPanel({ messages, onSend, onUpload, isLoading }: ChatPanelPr
       </div>
 
       {/* Suggestions */}
-      {messages.length === 0 && (
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '8px 12px',
-        }}>
-          {suggestions.map(s => (
-            <button
-              key={s}
-              onClick={() => onSend(s)}
-              style={{
-                padding: '4px 10px', borderRadius: '12px', border: '1px solid #444',
-                background: 'transparent', color: '#aaa', fontSize: '12px', cursor: 'pointer',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '8px 12px',
+      }}>
+        {suggestions.map(s => (
+          <button
+            key={s}
+            onClick={() => onSend(s)}
+            disabled={isLoading}
+            style={{
+              padding: '4px 10px', borderRadius: '12px', border: '1px solid #444',
+              background: 'transparent', color: '#aaa', fontSize: '12px',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.5 : 1,
+            }}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
 
       {/* Input */}
       <form onSubmit={handleSubmit} style={{

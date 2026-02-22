@@ -151,6 +151,30 @@ User: ${query}`;
           notifications.push({ type: args.type, message: args.message });
         } else if (toolCall.name === 'remove_component') {
           removeComponents.push(args.component_id);
+        } else if (toolCall.name === 'fetch_page') {
+          const page = JSON.parse(result);
+          if (page.content && page.mime_type !== 'error') {
+            const componentId = randomUUID().slice(0, 8);
+            const html = buildReaderViewHtml(page);
+            components.push({
+              component_id: componentId,
+              html,
+              metadata: {
+                component_type: 'web_page',
+                sandbox_permissions: ['allow-scripts'],
+                intent_schema: {},
+              },
+            });
+            // Send short summary to LLM instead of full content
+            result = JSON.stringify({
+              title: page.title,
+              excerpt: page.excerpt || page.text_content?.slice(0, 500) || '',
+              byline: page.byline,
+              length: page.length,
+              component_id: componentId,
+              note: 'Full article rendered in reader view window.',
+            });
+          }
         } else if (toolCall.name === 'execute_code') {
           const payload = JSON.parse(result);
           const componentId = randomUUID().slice(0, 8);
@@ -291,4 +315,33 @@ except ImportError:
   }
 })();
 </script></div>`;
+}
+
+function buildReaderViewHtml(page: { title: string; content: string; byline: string; excerpt: string }): string {
+  const safeContent = page.content
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '');
+
+  return `<div style="background:#1a1a2e;color:#d4d4d4;width:100vw;height:100vh;overflow:auto">
+<article style="max-width:720px;margin:0 auto;padding:32px 24px;font-family:Georgia,'Times New Roman',serif;line-height:1.8;font-size:17px">
+<header style="margin-bottom:32px;border-bottom:1px solid #333;padding-bottom:20px">
+<h1 style="font-size:28px;color:#e0e0e0;margin:0 0 8px;line-height:1.3">${page.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h1>
+${page.byline ? `<div style="color:#888;font-size:14px;font-style:italic">${page.byline.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
+</header>
+<div id="article-body" style="color:#ccc">${safeContent}</div>
+</article>
+<style>
+  #article-body img { max-width:100%; height:auto; border-radius:4px; margin:16px 0; }
+  #article-body a { color:#6b9fff; text-decoration:none; }
+  #article-body a:hover { text-decoration:underline; }
+  #article-body p { margin:0 0 16px; }
+  #article-body h1,#article-body h2,#article-body h3 { color:#e0e0e0; margin:24px 0 12px; }
+  #article-body blockquote { border-left:3px solid #444; padding-left:16px; color:#999; margin:16px 0; }
+  #article-body pre,#article-body code { background:#111; padding:2px 6px; border-radius:3px; font-size:14px; }
+  #article-body pre { padding:12px; overflow-x:auto; }
+  #article-body ul,#article-body ol { margin:0 0 16px; padding-left:24px; }
+  #article-body li { margin-bottom:6px; }
+</style>
+</div>`;
 }

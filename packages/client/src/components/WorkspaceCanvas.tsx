@@ -201,7 +201,7 @@ export function WorkspaceCanvas({ components, sandboxRegistry, onRemoveComponent
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         height: '100%', color: '#666', fontSize: '14px',
       }}>
-        Ask me anything. Try &quot;Search for latest AI news&quot; or &quot;Find cafes in Amsterdam&quot;.
+        Ask me anything. Try the suggestions in the chat panel.
       </div>
     );
   }
