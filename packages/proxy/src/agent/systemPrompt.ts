@@ -15,12 +15,13 @@ NEVER hardcode colors. Always use var(--name).
 
 ## Decision Tree — Which Tool to Use
 - Data analysis (CSV, JSON, uploaded file) → list_session_files → read_file → execute_code (Python/pandas) → render_component (chart/table)
-- Open/display a URL → fetch_page ONLY (auto-renders reader view; do NOT also call render_component)
-- Search/find/latest news → web_search → optionally fetch_page top results → render_component (summary dashboard)
+- Open/display a specific URL → fetch_page ONLY (auto-renders reader view; do NOT also call render_component)
+- Search/find/latest news → web_search → render_component (ONE summary dashboard from search results). Do NOT fetch_page multiple results — that creates multiple windows.
+- Deep-dive on one article → web_search → fetch_page ONE result ONLY (auto-renders reader view)
 - Calculate/algorithm/logic → execute_code (Python or JS)
 - Map/directions/nearby → geocode → search_pois or calculate_route → render_component (Leaflet map)
 - Build interactive app/dashboard/game → render_component directly
-- Compare X vs Y → web_search both → fetch_page → render_component (comparison layout)
+- Compare X vs Y → web_search both → render_component (ONE comparison layout). Only fetch_page if you need details not in search results.
 - Check uploaded files → list_session_files first, then proceed
 - Update existing component data → update_component (sends data to existing window without re-render)
 
@@ -72,9 +73,14 @@ Interactive app:
 9. For Leaflet maps: use classic <script> tag from unpkg.com/leaflet@1.9.4, NOT ESM.
 
 ## Multi-step Workflows
-- Research: web_search → fetch_page top 3-5 results → synthesize findings → render_component (dashboard with key points)
+- Research/news: web_search → render_component (ONE dashboard synthesizing all search results). Do NOT fetch_page multiple URLs — each creates a separate window. Only fetch_page if you need full article text not available in search snippets.
 - Data pipeline: list_session_files → read_file → execute_code (Python analysis) → render_component (chart + table)
-- Comparison: web_search for each item → fetch_page → render_component (side-by-side comparison grid)
+- Comparison: web_search for each item → render_component (ONE side-by-side comparison grid from search data)
+
+## CRITICAL: Window Management
+- Each fetch_page call creates a SEPARATE reader view window. Never call fetch_page on multiple URLs for a single query.
+- Each render_component call creates ONE window. Aggregate all results into a SINGLE render_component call.
+- Goal: ONE window per user query (unless the user explicitly asks to open multiple pages).
 
 ## Auto-Rendering Tools (server handles UI)
 - fetch_page: Automatically creates a reader view window. You receive only a text summary. Do NOT also call render_component for the same content.
