@@ -25,13 +25,27 @@ interface ChatMessage {
 }
 
 const sessionMemories = new Map<string, ChatMessage[]>();
-const MAX_MEMORY = 6;
+const MAX_MEMORY = 20;
 
 function getMemory(sessionId: string): ChatMessage[] {
   if (!sessionMemories.has(sessionId)) {
     sessionMemories.set(sessionId, []);
   }
   return sessionMemories.get(sessionId)!;
+}
+
+interface SessionContext {
+  uploadedFiles: string[];
+  componentTypes: string[];
+}
+
+const sessionContexts = new Map<string, SessionContext>();
+
+function getSessionContext(sessionId: string): SessionContext {
+  if (!sessionContexts.has(sessionId)) {
+    sessionContexts.set(sessionId, { uploadedFiles: [], componentTypes: [] });
+  }
+  return sessionContexts.get(sessionId)!;
 }
 
 async function executeTool(name: string, input: Record<string, any>, sessionId: string): Promise<string> {
@@ -107,9 +121,18 @@ async function executeTool(name: string, input: Record<string, any>, sessionId: 
 export async function processQuery(request: AgentQueryRequest): Promise<AgentResponse> {
   const { query, context } = request;
   const memory = getMemory(context.session_id);
+  const sessionCtx = getSessionContext(context.session_id);
+
+  // Track uploaded files from context
+  if (context.uploaded_files) {
+    for (const f of context.uploaded_files) {
+      if (!sessionCtx.uploadedFiles.includes(f)) sessionCtx.uploadedFiles.push(f);
+    }
+  }
 
   const contextBlock = `Session: ${context.session_id}
 Active components: ${context.active_components.join(', ') || 'none'}
+${sessionCtx.uploadedFiles.length > 0 ? `Uploaded files: ${sessionCtx.uploadedFiles.join(', ')}` : ''}
 ${context.viewport ? `Viewport: center=[${context.viewport.center}], zoom=${context.viewport.zoom}` : ''}
 ${context.last_user_intent ? `Last intent: ${JSON.stringify(context.last_user_intent)}` : ''}
 
@@ -253,6 +276,12 @@ User: ${query}`;
   }
   if (memory.length > MAX_MEMORY) {
     memory.splice(0, memory.length - MAX_MEMORY);
+  }
+
+  // Track component types in session context
+  for (const c of components) {
+    const type = c.metadata.component_type;
+    if (!sessionCtx.componentTypes.includes(type)) sessionCtx.componentTypes.push(type);
   }
 
   return {
