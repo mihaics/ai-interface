@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 
@@ -28,6 +28,25 @@ export async function readSessionFile(
   };
 
   return { content, mime_type: mimeMap[ext] || 'text/plain' };
+}
+
+export async function listSessionFiles(
+  sessionId: string,
+): Promise<Array<{ filename: string; size: number }>> {
+  const dir = getSessionDir(sessionId);
+  if (!existsSync(dir)) return [];
+
+  const entries = await readdir(dir);
+  const files: Array<{ filename: string; size: number }> = [];
+
+  for (const entry of entries) {
+    const fileStat = await stat(join(dir, entry));
+    if (fileStat.isFile()) {
+      files.push({ filename: entry, size: fileStat.size });
+    }
+  }
+
+  return files;
 }
 
 export async function writeSessionFile(

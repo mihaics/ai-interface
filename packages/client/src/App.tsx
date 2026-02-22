@@ -66,18 +66,6 @@ export function App() {
     try { sessionStorage.setItem('chat_messages', JSON.stringify(messages)); } catch {}
   }, [messages]);
 
-  // Auto-remove code execution windows that error out
-  useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      if (e.data?.type === 'code_exec_error' && e.data.component_id) {
-        sandboxRegistryRef.current.unregister(e.data.component_id);
-        setComponents(prev => prev.filter(c => c.component_id !== e.data.component_id));
-      }
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-
   const addNotification = useCallback((type: Notification['type'], message: string) => {
     const id = crypto.randomUUID();
     setNotifications(prev => [...prev, { id, type, message }]);
@@ -86,6 +74,22 @@ export function App() {
   const dismissNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
+
+  // Auto-remove code execution windows that error out
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'code_exec_error' && e.data.component_id) {
+        sandboxRegistryRef.current.unregister(e.data.component_id);
+        setComponents(prev => prev.filter(c => c.component_id !== e.data.component_id));
+      }
+      if (e.data?.type === 'component_error' && e.data.component_id) {
+        console.warn(`Component ${e.data.component_id} error:`, e.data.error);
+        addNotification('warning', `Component error: ${e.data.error?.slice(0, 120)}`);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [addNotification]);
 
   const handleRemoveComponent = useCallback((id: string) => {
     sandboxRegistryRef.current.unregister(id);
@@ -128,6 +132,22 @@ export function App() {
           sandboxRegistryRef.current.unregister(id);
         }
         setComponents(prev => prev.filter(c => !response.remove_components!.includes(c.component_id)));
+      }
+
+      // Update existing components
+      if (response.component_updates) {
+        for (const update of response.component_updates) {
+          const entry = sandboxRegistryRef.current.getByComponentId(update.component_id);
+          if (entry?.iframe?.contentWindow) {
+            entry.iframe.contentWindow.postMessage({
+              type: 'ui_update',
+              component_id: update.component_id,
+              action: update.action,
+              payload: update.payload,
+              signature: '',
+            }, '*');
+          }
+        }
       }
 
       // Show notifications

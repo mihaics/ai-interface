@@ -36,4 +36,5 @@ export interface AgentResponse {
   components?: UIComponentPayload[];
   remove_components?: string[];
   notifications?: Array<{ type: 'info' | 'success' | 'warning' | 'error'; message: string }>;
+  component_updates?: Array<{ component_id: string; action: string; payload: Record<string, unknown> }>;
 }
