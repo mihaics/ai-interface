@@ -8,6 +8,7 @@ import { calculateRoute } from '../tools/routing.js';
 import { webSearch } from '../tools/webSearch.js';
 import { fetchPage } from '../tools/fetchPage.js';
 import { prepareCodeExec } from '../tools/codeExec.js';
+import { readSessionFile, writeSessionFile } from '../tools/fileOps.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
 let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
@@ -33,7 +34,7 @@ function getMemory(sessionId: string): ChatMessage[] {
   return sessionMemories.get(sessionId)!;
 }
 
-async function executeTool(name: string, input: Record<string, any>): Promise<string> {
+async function executeTool(name: string, input: Record<string, any>, sessionId: string): Promise<string> {
   switch (name) {
     case 'geocode': {
       const results = await geocode(input.query);
@@ -60,6 +61,14 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
     case 'execute_code': {
       const payload = prepareCodeExec(input.code, input.language);
       return JSON.stringify(payload);
+    }
+    case 'read_file': {
+      const result = await readSessionFile(sessionId, input.filename);
+      return JSON.stringify(result);
+    }
+    case 'write_file': {
+      const result = await writeSessionFile(sessionId, input.filename, input.content);
+      return JSON.stringify(result);
     }
     case 'render_component':
     case 'show_notification':
@@ -119,7 +128,7 @@ User: ${query}`;
           args = {};
         }
 
-        const result = await executeTool(toolCall.name, args);
+        const result = await executeTool(toolCall.name, args, context.session_id);
 
         // Extract UI actions
         if (toolCall.name === 'render_component') {

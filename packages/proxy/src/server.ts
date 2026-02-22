@@ -9,6 +9,8 @@ import express from 'express';
 import cors from 'cors';
 import { sessionRouter } from './routes/session.js';
 import { mcpRouter } from './routes/mcp.js';
+import { uploadRouter } from './routes/upload.js';
+import { filesRouter } from './routes/files.js';
 import { validateSession } from './middleware/validateSession.js';
 import { rateLimit } from './middleware/rateLimit.js';
 
@@ -31,6 +33,12 @@ app.use('/api/mcp', validateSession, rateLimit);
 
 // MCP agent endpoint
 app.use('/api/mcp', mcpRouter);
+
+// File upload (protected, under MCP path)
+app.use('/api/mcp', uploadRouter);
+
+// File download (public, file path is the auth)
+app.use('/api', filesRouter);
 
 app.listen(PORT, () => {
   console.log(`Orchestration proxy running on port ${PORT}`);

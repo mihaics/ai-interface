@@ -138,4 +138,33 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'read_file',
+      description: 'Read a user-uploaded file from the session.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: { type: 'string', description: 'Filename to read' },
+        },
+        required: ['filename'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'write_file',
+      description: 'Write a file to the session, making it downloadable.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: { type: 'string', description: 'Filename to create' },
+          content: { type: 'string', description: 'File content' },
+        },
+        required: ['filename', 'content'],
+      },
+    },
+  },
 ];
