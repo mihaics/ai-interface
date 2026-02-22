@@ -126,20 +126,30 @@ User: ${query}`;
         })),
       });
 
-      for (const toolCall of response.tool_calls) {
-        let args: Record<string, any>;
-        try {
-          args = JSON.parse(toolCall.arguments);
-        } catch {
-          args = {};
-        }
+      // Execute all tool calls in parallel
+      const toolResults = await Promise.all(
+        response.tool_calls.map(async (toolCall) => {
+          let args: Record<string, any>;
+          try {
+            args = JSON.parse(toolCall.arguments);
+          } catch {
+            args = {};
+          }
 
-        let result: string;
-        try {
-          result = await executeTool(toolCall.name, args, context.session_id);
-        } catch (err: any) {
-          result = JSON.stringify({ error: err.message || 'Tool execution failed' });
-        }
+          let result: string;
+          try {
+            result = await executeTool(toolCall.name, args, context.session_id);
+          } catch (err: any) {
+            result = JSON.stringify({ error: err.message || 'Tool execution failed' });
+          }
+
+          return { toolCall, args, result };
+        })
+      );
+
+      // Process results sequentially (UI extraction order matters)
+      for (const { toolCall, args, result: rawResult } of toolResults) {
+        let result = rawResult;
 
         // Extract UI actions
         if (toolCall.name === 'render_component') {
@@ -177,7 +187,6 @@ User: ${query}`;
                 intent_schema: {},
               },
             });
-            // Send short summary to LLM instead of full content
             result = JSON.stringify({
               title: page.title,
               excerpt: page.excerpt || page.text_content?.slice(0, 500) || '',
