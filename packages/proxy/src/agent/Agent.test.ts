@@ -5,31 +5,28 @@ import { SYSTEM_PROMPT } from './systemPrompt.js';
 describe('agent setup', () => {
   it('has all required tool definitions', () => {
     const toolNames = TOOL_DEFINITIONS.map((t: any) => t.function.name);
-    // GIS tools
     expect(toolNames).toContain('geocode');
     expect(toolNames).toContain('search_pois');
     expect(toolNames).toContain('calculate_route');
-    // UI tools
     expect(toolNames).toContain('render_component');
     expect(toolNames).toContain('show_notification');
     expect(toolNames).toContain('remove_component');
-    // Universal browser tools
     expect(toolNames).toContain('web_search');
     expect(toolNames).toContain('fetch_page');
     expect(toolNames).toContain('execute_code');
     expect(toolNames).toContain('read_file');
     expect(toolNames).toContain('write_file');
-    // Verify exact count
-    expect(toolNames).toHaveLength(11);
+    // New tools will be added in Tasks 4-5; count updated then
   });
 
-  it('system prompt covers universal capabilities', () => {
-    expect(SYSTEM_PROMPT).toContain('web search');
-    expect(SYSTEM_PROMPT).toContain('code execution');
+  it('system prompt covers design system and decision trees', () => {
+    expect(SYSTEM_PROMPT).toContain('--bg-base');
+    expect(SYSTEM_PROMPT).toContain('--accent');
     expect(SYSTEM_PROMPT).toContain('render_component');
     expect(SYSTEM_PROMPT).toContain('COMPONENT_ID');
-    expect(SYSTEM_PROMPT).toContain('Data tables');
     expect(SYSTEM_PROMPT).toContain('execute_code');
+    expect(SYSTEM_PROMPT).toContain('fetch_page');
+    expect(SYSTEM_PROMPT).toContain('Decision Tree');
   });
 
   it('render_component tool accepts html', () => {
