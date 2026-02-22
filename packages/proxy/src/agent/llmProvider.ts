@@ -180,3 +180,25 @@ export function createProviderFromEnv(): LLMProvider {
   console.log(`LLM provider: OpenAI-compatible at ${baseURL} (${model})`);
   return createOpenAIProvider(baseURL, apiKey, model);
 }
+
+/** Create augmenter provider from environment variables. Returns null if disabled or unconfigured. */
+export function createAugmenterProviderFromEnv(): LLMProvider | null {
+  if (process.env.AUGMENTER_ENABLED === 'false') return null;
+
+  const provider = process.env.LLM_PROVIDER || 'openai';
+
+  if (provider === 'anthropic') {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return null;
+    const model = process.env.AUGMENTER_MODEL || 'claude-haiku-4-5-20251001';
+    console.log(`Augmenter provider: Anthropic (${model})`);
+    return createAnthropicProvider(apiKey, model);
+  }
+
+  // openai-compatible
+  const baseURL = process.env.LLM_BASE_URL || 'http://localhost:11434/v1';
+  const apiKey = process.env.LLM_API_KEY || 'ollama';
+  const model = process.env.AUGMENTER_MODEL || 'gpt-4o-mini';
+  console.log(`Augmenter provider: OpenAI-compatible at ${baseURL} (${model})`);
+  return createOpenAIProvider(baseURL, apiKey, model);
+}
