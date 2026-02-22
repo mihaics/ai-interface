@@ -298,11 +298,11 @@ function buildCodeExecHtml(code: string, language: string): string {
     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
   if (language === 'javascript') {
-    return `<div style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
-<h3 style="color:#888;margin:0 0 8px">JavaScript</h3>
-<pre style="background:#111;padding:12px;border-radius:4px;margin:0 0 8px;overflow-x:auto"><code>${escaped}</code></pre>
-<h3 style="color:#888;margin:0 0 8px">Output</h3>
-<pre id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto"></pre>
+    return `<div style="background:var(--bg-base);color:var(--text-primary);font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
+<h3 style="color:var(--text-secondary);margin:0 0 8px">JavaScript</h3>
+<pre style="background:var(--bg-surface);padding:12px;border-radius:4px;margin:0 0 8px;overflow-x:auto"><code>${escaped}</code></pre>
+<h3 style="color:var(--text-secondary);margin:0 0 8px">Output</h3>
+<pre id="output" style="background:var(--bg-surface);padding:12px;border-radius:4px;color:var(--success);overflow-x:auto"></pre>
 <script>
 const _log = [];
 const _origLog = console.log;
@@ -319,13 +319,13 @@ document.getElementById('output').textContent = _log.join('\\n');
   }
 
   // Python via Pyodide
-  return `<div id="container" style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
+  return `<div id="container" style="background:var(--bg-base);color:var(--text-primary);font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
 <details style="margin:0 0 8px">
-<summary style="color:#888;cursor:pointer;font-size:14px">Python Source</summary>
-<pre style="background:#111;padding:12px;border-radius:4px;margin:4px 0 0;overflow-x:auto"><code>${escaped}</code></pre>
+<summary style="color:var(--text-secondary);cursor:pointer;font-size:14px">Python Source</summary>
+<pre style="background:var(--bg-surface);padding:12px;border-radius:4px;margin:4px 0 0;overflow-x:auto"><code>${escaped}</code></pre>
 </details>
-<div id="output-label" style="color:#888;margin:0 0 8px;font-size:14px">Output</div>
-<div id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto;white-space:pre-wrap">Loading Pyodide...</div>
+<div id="output-label" style="color:var(--text-secondary);margin:0 0 8px;font-size:14px">Output</div>
+<div id="output" style="background:var(--bg-surface);padding:12px;border-radius:4px;color:var(--success);overflow-x:auto;white-space:pre-wrap">Loading Pyodide...</div>
 <div id="visual" style="margin-top:12px"></div>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
 <script>
@@ -368,7 +368,7 @@ try:
     svgs = []
     for fig in figs:
         buf = io.BytesIO()
-        fig.savefig(buf, format='svg', bbox_inches='tight', facecolor='#1a1a2e', edgecolor='none')
+        fig.savefig(buf, format='svg', bbox_inches='tight', facecolor='#0a0a1a', edgecolor='none')
         buf.seek(0)
         svgs.append(buf.read().decode('utf-8'))
         plt.close(fig)
@@ -400,22 +400,22 @@ function buildReaderViewHtml(page: { title: string; content: string; byline: str
     .replace(/on\w+="[^"]*"/gi, '')
     .replace(/on\w+='[^']*'/gi, '');
 
-  return `<div style="background:#1a1a2e;color:#d4d4d4;width:100vw;height:100vh;overflow:auto">
+  return `<div style="background:var(--bg-base);color:var(--text-primary);width:100vw;height:100vh;overflow:auto">
 <article style="max-width:720px;margin:0 auto;padding:32px 24px;font-family:Georgia,'Times New Roman',serif;line-height:1.8;font-size:17px">
-<header style="margin-bottom:32px;border-bottom:1px solid #333;padding-bottom:20px">
-<h1 style="font-size:28px;color:#e0e0e0;margin:0 0 8px;line-height:1.3">${page.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h1>
-${page.byline ? `<div style="color:#888;font-size:14px;font-style:italic">${page.byline.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
+<header style="margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:20px">
+<h1 style="font-size:28px;color:var(--text-primary);margin:0 0 8px;line-height:1.3">${page.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h1>
+${page.byline ? `<div style="color:var(--text-secondary);font-size:14px;font-style:italic">${page.byline.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
 </header>
-<div id="article-body" style="color:#ccc">${safeContent}</div>
+<div id="article-body" style="color:var(--text-primary)">${safeContent}</div>
 </article>
 <style>
   #article-body img { max-width:100%; height:auto; border-radius:4px; margin:16px 0; }
-  #article-body a { color:#6b9fff; text-decoration:none; }
+  #article-body a { color:var(--accent); text-decoration:none; }
   #article-body a:hover { text-decoration:underline; }
   #article-body p { margin:0 0 16px; }
-  #article-body h1,#article-body h2,#article-body h3 { color:#e0e0e0; margin:24px 0 12px; }
-  #article-body blockquote { border-left:3px solid #444; padding-left:16px; color:#999; margin:16px 0; }
-  #article-body pre,#article-body code { background:#111; padding:2px 6px; border-radius:3px; font-size:14px; }
+  #article-body h1,#article-body h2,#article-body h3 { color:var(--text-primary); margin:24px 0 12px; }
+  #article-body blockquote { border-left:3px solid var(--border); padding-left:16px; color:var(--text-muted); margin:16px 0; }
+  #article-body pre,#article-body code { background:var(--bg-surface); padding:2px 6px; border-radius:3px; font-size:14px; }
   #article-body pre { padding:12px; overflow-x:auto; }
   #article-body ul,#article-body ol { margin:0 0 16px; padding-left:24px; }
   #article-body li { margin-bottom:6px; }
