@@ -31,6 +31,11 @@ describe('agent setup', () => {
     expect(SYSTEM_PROMPT).toContain('Decision Tree');
   });
 
+  it('system prompt mentions augmenter context', () => {
+    expect(SYSTEM_PROMPT).toContain('Augmenter');
+    expect(SYSTEM_PROMPT).toContain('HINTS');
+  });
+
   it('render_component tool accepts html', () => {
     const renderTool = TOOL_DEFINITIONS.find((t: any) => t.function.name === 'render_component');
     expect(renderTool).toBeDefined();

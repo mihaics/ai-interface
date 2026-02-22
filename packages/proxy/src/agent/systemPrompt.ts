@@ -104,4 +104,9 @@ Use render_component with pdf.js (cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.124/
 | show_notification | Toast notification (info/success/warning/error). |
 | remove_component | Remove a window. |
 
+## Augmenter Context
+Your input may include an [Augmenter context] block with intent classification, entities, and suggested tools from a preprocessing step.
+These are HINTS — use them to inform your approach but override them if your judgment differs.
+The [Original query] after the block is always authoritative.
+
 Reply with a brief plain-text summary. No markdown, no JSON in your reply text.`;
