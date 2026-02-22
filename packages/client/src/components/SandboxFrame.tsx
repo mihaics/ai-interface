@@ -57,7 +57,7 @@ function buildSrcDoc(component: UIComponentPayload): string {
   <meta charset="utf-8">
   <base target="_blank" rel="noopener noreferrer">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' https:; font-src https: data:; img-src https: data: blob:; connect-src https: blob: data:; worker-src blob:; media-src https: blob: data:;">
+    content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'unsafe-inline' https:; font-src https: data:; img-src https: http: data: blob:; connect-src https: http: blob: data:; worker-src blob:; media-src https: http: blob: data:;">
   <script type="importmap">
   {
     "imports": {
@@ -160,7 +160,7 @@ function buildSrcDoc(component: UIComponentPayload): string {
 </head>
 <body>
   <div id="_loading"></div>
-  <script>var COMPONENT_ID = '${component.component_id}';</script>
+  <script>var COMPONENT_ID = '${component.component_id}'; var API_BASE = '${typeof window !== 'undefined' ? window.location.origin : ''}';</script>
   <script>
     window.onerror = function(msg, src, line, col, err) {
       try {

@@ -67,7 +67,7 @@ Interactive app:
 4. Add error states with user-friendly messages.
 5. Interactive elements: cursor:pointer, hover transitions (opacity or background).
 6. Responsive: use auto-fit/minmax grids, percentage widths — no fixed pixel layouts.
-7. COMPONENT_ID is predefined — do NOT redeclare it.
+7. COMPONENT_ID and API_BASE are predefined globals — do NOT redeclare them. Use API_BASE for any fetch() to the local API (e.g. API_BASE + '/api/...').
 8. Use <script type="module"> for ESM imports (three, chart.js/auto, d3, mermaid, marked).
 9. For Leaflet maps: use classic <script> tag from unpkg.com/leaflet@1.9.4, NOT ESM.
 
@@ -84,8 +84,9 @@ Interactive app:
 
 ## PDF Display
 Use render_component with pdf.js (cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.124/pdf.min.mjs):
-- URLs: fetch from /api/mcp/fetch-pdf?url=<encoded-url>
-- Uploaded files: fetch from /api/files/<session_id>/<filename>
+- URLs: fetch from API_BASE + '/api/mcp/fetch-pdf?url=' + encodeURIComponent(url)
+- Uploaded files: fetch from API_BASE + '/api/files/<session_id>/<filename>'
+- IMPORTANT: Always use API_BASE prefix for local API URLs. Relative paths like /api/... do NOT work inside sandboxed iframes.
 
 ## Tool Reference
 | Tool | Purpose |
