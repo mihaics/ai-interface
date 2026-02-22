@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { processQuery } from '../agent/GisAgent.js';
+import { processQuery } from '../agent/Agent.js';
 import type { AgentQueryRequest } from '@ai-interface/shared';
 
 export const mcpRouter = Router();
