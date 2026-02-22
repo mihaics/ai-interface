@@ -5,6 +5,7 @@ import { createProviderFromEnv } from './llmProvider.js';
 import { geocode } from '../tools/geocoding.js';
 import { searchPOIs } from '../tools/poiSearch.js';
 import { calculateRoute } from '../tools/routing.js';
+import { webSearch } from '../tools/webSearch.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
 let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
@@ -45,6 +46,10 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
         input.from_lat, input.from_lon, input.to_lat, input.to_lon, input.mode,
       );
       return JSON.stringify(result);
+    }
+    case 'web_search': {
+      const results = await webSearch(input.query, input.category);
+      return JSON.stringify(results);
     }
     case 'render_component':
     case 'show_notification':

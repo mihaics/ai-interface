@@ -94,4 +94,19 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'web_search',
+      description: 'Search the web via SearXNG. Returns titles, URLs, snippets.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Search query' },
+          category: { type: 'string', enum: ['general', 'news', 'images', 'science', 'files'], description: 'Search category (default general)' },
+        },
+        required: ['query'],
+      },
+    },
+  },
 ];
