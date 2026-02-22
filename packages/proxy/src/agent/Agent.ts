@@ -77,6 +77,7 @@ async function executeTool(name: string, input: Record<string, any>, sessionId: 
     case 'render_component':
     case 'show_notification':
     case 'remove_component':
+    case 'update_component':
       return JSON.stringify({ status: 'queued', ...input });
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
@@ -102,6 +103,7 @@ User: ${query}`;
   const components: UIComponentPayload[] = [];
   const removeComponents: string[] = [];
   const notifications: AgentResponse['notifications'] = [];
+  const componentUpdates: Array<{ component_id: string; action: string; payload: Record<string, unknown> }> = [];
   let agentMessage = '';
 
   let continueLoop = true;
@@ -155,6 +157,12 @@ User: ${query}`;
           notifications.push({ type: args.type, message: args.message });
         } else if (toolCall.name === 'remove_component') {
           removeComponents.push(args.component_id);
+        } else if (toolCall.name === 'update_component') {
+          componentUpdates.push({
+            component_id: args.component_id,
+            action: args.action,
+            payload: args.payload || {},
+          });
         } else if (toolCall.name === 'fetch_page') {
           const page = JSON.parse(result);
           if (page.content && page.mime_type !== 'error') {
@@ -223,6 +231,7 @@ User: ${query}`;
     components: components.length > 0 ? components : undefined,
     remove_components: removeComponents.length > 0 ? removeComponents : undefined,
     notifications: notifications.length > 0 ? notifications : undefined,
+    component_updates: componentUpdates.length > 0 ? componentUpdates : undefined,
   };
 }
 

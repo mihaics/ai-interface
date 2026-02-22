@@ -179,4 +179,20 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'update_component',
+      description: 'Send a data update to an existing UI component without re-rendering. The component must listen for ui_update postMessage events.',
+      parameters: {
+        type: 'object',
+        properties: {
+          component_id: { type: 'string', description: 'ID of the component to update' },
+          action: { type: 'string', description: 'Update action name the component listens for' },
+          payload: { type: 'object', description: 'Data payload to send to the component' },
+        },
+        required: ['component_id', 'action', 'payload'],
+      },
+    },
+  },
 ];

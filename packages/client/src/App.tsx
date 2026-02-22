@@ -134,6 +134,22 @@ export function App() {
         setComponents(prev => prev.filter(c => !response.remove_components!.includes(c.component_id)));
       }
 
+      // Update existing components
+      if (response.component_updates) {
+        for (const update of response.component_updates) {
+          const entry = sandboxRegistryRef.current.getByComponentId(update.component_id);
+          if (entry?.iframe?.contentWindow) {
+            entry.iframe.contentWindow.postMessage({
+              type: 'ui_update',
+              component_id: update.component_id,
+              action: update.action,
+              payload: update.payload,
+              signature: '',
+            }, '*');
+          }
+        }
+      }
+
       // Show notifications
       if (response.notifications) {
         for (const n of response.notifications) {
