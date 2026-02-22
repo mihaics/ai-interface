@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { SYSTEM_PROMPT } from './systemPrompt.js';
 import { TOOL_DEFINITIONS } from './toolRegistry.js';
-import { createProviderFromEnv } from './llmProvider.js';
+import { createProviderFromEnv, createAugmenterProviderFromEnv, type LLMProvider } from './llmProvider.js';
+import { augmentQuery, type AugmentResult } from './queryAugmenter.js';
 import { geocode } from '../tools/geocoding.js';
 import { searchPOIs } from '../tools/poiSearch.js';
 import { calculateRoute } from '../tools/routing.js';
@@ -15,6 +16,12 @@ let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
 function getProvider() {
   if (!_provider) _provider = createProviderFromEnv();
   return _provider;
+}
+
+let _augmenterProvider: LLMProvider | null | undefined = undefined;
+function getAugmenterProvider(): LLMProvider | null {
+  if (_augmenterProvider === undefined) _augmenterProvider = createAugmenterProviderFromEnv();
+  return _augmenterProvider;
 }
 
 interface ChatMessage {
@@ -130,6 +137,37 @@ export async function processQuery(request: AgentQueryRequest): Promise<AgentRes
     }
   }
 
+  // Query augmentation
+  let augment: AugmentResult | null = null;
+  const augmenterProvider = getAugmenterProvider();
+  if (augmenterProvider) {
+    augment = await augmentQuery(query, context, augmenterProvider);
+    if (augment.route === 'direct' && augment.direct_response) {
+      memory.push({ role: 'user', content: query });
+      memory.push({ role: 'assistant', content: augment.direct_response });
+      return { message: augment.direct_response };
+    }
+  }
+
+  // Build augmenter context prefix if available
+  let augmenterPrefix = '';
+  if (augment && augment.route === 'agent') {
+    const parts: string[] = ['[Augmenter context]'];
+    if (augment.intent) parts.push(`Intent: ${augment.intent}${augment.complexity ? ` | Complexity: ${augment.complexity}` : ''}`);
+    if (augment.entities && Object.keys(augment.entities).length > 0) {
+      parts.push(`Entities: ${Object.entries(augment.entities).map(([k, v]) => `${k}=${v}`).join('; ')}`);
+    }
+    if (augment.suggested_tools && augment.suggested_tools.length > 0) {
+      parts.push(`Suggested tools: ${augment.suggested_tools.join(', ')}`);
+    }
+    if (augment.augmented_query && augment.augmented_query !== query) {
+      parts.push(`Enhanced query: ${augment.augmented_query}`);
+    }
+    parts.push('');
+    parts.push('[Original query]');
+    augmenterPrefix = parts.join('\n') + '\n';
+  }
+
   const contextBlock = `Session: ${context.session_id}
 Active components: ${context.active_components.join(', ') || 'none'}
 ${sessionCtx.uploadedFiles.length > 0 ? `Uploaded files: ${sessionCtx.uploadedFiles.join(', ')}` : ''}
@@ -137,7 +175,7 @@ ${sessionCtx.componentTypes.length > 0 ? `Previously rendered: ${sessionCtx.comp
 ${context.viewport ? `Viewport: center=[${context.viewport.center}], zoom=${context.viewport.zoom}` : ''}
 ${context.last_user_intent ? `Last intent: ${JSON.stringify(context.last_user_intent)}` : ''}
 
-User: ${query}`;
+${augmenterPrefix}User: ${query}`;
 
   const messages: ChatMessage[] = [
     ...memory,
