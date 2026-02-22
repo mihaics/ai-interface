@@ -5,12 +5,22 @@ import { SYSTEM_PROMPT } from './systemPrompt.js';
 describe('agent setup', () => {
   it('has all required tool definitions', () => {
     const toolNames = TOOL_DEFINITIONS.map(t => t.function.name);
+    // GIS tools
     expect(toolNames).toContain('geocode');
     expect(toolNames).toContain('search_pois');
     expect(toolNames).toContain('calculate_route');
+    // UI tools
     expect(toolNames).toContain('render_component');
     expect(toolNames).toContain('show_notification');
     expect(toolNames).toContain('remove_component');
+    // Universal browser tools
+    expect(toolNames).toContain('web_search');
+    expect(toolNames).toContain('fetch_page');
+    expect(toolNames).toContain('execute_code');
+    expect(toolNames).toContain('read_file');
+    expect(toolNames).toContain('write_file');
+    // Verify exact count
+    expect(toolNames).toHaveLength(11);
   });
 
   it('system prompt covers universal capabilities', () => {
