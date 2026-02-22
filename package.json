@@ -1,0 +1,19 @@
+{
+  "name": "ai-interface",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:proxy\" \"npm run dev:client\"",
+    "dev:proxy": "npm -w packages/proxy run dev",
+    "dev:client": "npm -w packages/client run dev",
+    "build": "npm -w packages/shared run build && npm -w packages/proxy run build && npm -w packages/client run build",
+    "test": "npm -w packages/shared run test && npm -w packages/proxy run test && npm -w packages/client run test",
+    "test:shared": "npm -w packages/shared run test",
+    "test:proxy": "npm -w packages/proxy run test",
+    "test:client": "npm -w packages/client run test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}
