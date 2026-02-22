@@ -56,7 +56,7 @@ function buildSrcDoc(component: UIComponentPayload): string {
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; script-src 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://unpkg.com; img-src https: data:; connect-src 'none';">
+    content="default-src 'none'; script-src 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://unpkg.com; img-src https: data: blob:; connect-src https:;">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; overflow: hidden; }
@@ -64,7 +64,7 @@ function buildSrcDoc(component: UIComponentPayload): string {
   </style>
 </head>
 <body>
-  <script>const COMPONENT_ID = '${component.component_id}';</script>
+  <script>var COMPONENT_ID = '${component.component_id}';</script>
   ${component.html}
 </body>
 </html>`;

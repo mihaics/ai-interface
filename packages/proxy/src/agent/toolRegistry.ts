@@ -1,84 +1,97 @@
-import type Anthropic from '@anthropic-ai/sdk';
+import type OpenAI from 'openai';
 
-/** Tool definitions for Claude's tool_use feature. */
-export const TOOL_DEFINITIONS: Anthropic.Tool[] = [
+export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
   {
-    name: 'geocode',
-    description: 'Resolve a place name to geographic coordinates. Returns lat/lon and display name.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        query: { type: 'string', description: 'Place name to search for (e.g., "Amsterdam", "Eiffel Tower")' },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'search_pois',
-    description: 'Search for points of interest near a location. Returns names, coordinates, and tags.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        poi_type: { type: 'string', description: 'OSM amenity type (e.g., "cafe", "restaurant", "hospital", "hotel")' },
-        lat: { type: 'number', description: 'Center latitude' },
-        lon: { type: 'number', description: 'Center longitude' },
-        radius: { type: 'number', description: 'Search radius in meters (default 1000)' },
-      },
-      required: ['poi_type', 'lat', 'lon'],
-    },
-  },
-  {
-    name: 'calculate_route',
-    description: 'Calculate a route between two points. Returns distance, duration, and geometry.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        from_lat: { type: 'number' },
-        from_lon: { type: 'number' },
-        to_lat: { type: 'number' },
-        to_lon: { type: 'number' },
-        mode: { type: 'string', enum: ['auto', 'bicycle', 'pedestrian'], description: 'Travel mode (default auto)' },
-      },
-      required: ['from_lat', 'from_lon', 'to_lat', 'to_lon'],
-    },
-  },
-  {
-    name: 'render_component',
-    description: 'Render an interactive UI component in the user\'s workspace. The HTML must be self-contained with inline CSS/JS. Use Leaflet CDN for maps, Chart.js CDN for charts.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        html: { type: 'string', description: 'Complete self-contained HTML document for the component' },
-        component_type: { type: 'string', description: 'Type identifier (e.g., "map_view", "data_table", "chart")' },
-        intent_schema: {
-          type: 'object',
-          description: 'Map of intent names to their payload field schemas. Example: {"marker_click": {"lat": {"type": "number"}, "lon": {"type": "number"}}}',
+    type: 'function',
+    function: {
+      name: 'geocode',
+      description: 'Resolve place name to lat/lon coordinates.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Place name' },
         },
+        required: ['query'],
       },
-      required: ['html', 'component_type'],
     },
   },
   {
-    name: 'show_notification',
-    description: 'Show a toast notification to the user.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        message: { type: 'string', description: 'Notification text' },
-        type: { type: 'string', enum: ['info', 'success', 'warning', 'error'], description: 'Notification type' },
+    type: 'function',
+    function: {
+      name: 'search_pois',
+      description: 'Find points of interest near coordinates.',
+      parameters: {
+        type: 'object',
+        properties: {
+          poi_type: { type: 'string', description: 'OSM amenity type (cafe, restaurant, hospital)' },
+          lat: { type: 'number' },
+          lon: { type: 'number' },
+          radius: { type: 'number', description: 'Meters (default 1000)' },
+        },
+        required: ['poi_type', 'lat', 'lon'],
       },
-      required: ['message', 'type'],
     },
   },
   {
-    name: 'remove_component',
-    description: 'Remove a UI component from the workspace.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        component_id: { type: 'string', description: 'ID of the component to remove' },
+    type: 'function',
+    function: {
+      name: 'calculate_route',
+      description: 'Route between two points.',
+      parameters: {
+        type: 'object',
+        properties: {
+          from_lat: { type: 'number' },
+          from_lon: { type: 'number' },
+          to_lat: { type: 'number' },
+          to_lon: { type: 'number' },
+          mode: { type: 'string', enum: ['auto', 'bicycle', 'pedestrian'] },
+        },
+        required: ['from_lat', 'from_lon', 'to_lat', 'to_lon'],
       },
-      required: ['component_id'],
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'render_component',
+      description: 'Render self-contained HTML/JS UI in workspace. Use Leaflet CDN for maps.',
+      parameters: {
+        type: 'object',
+        properties: {
+          html: { type: 'string', description: 'Self-contained HTML' },
+          component_type: { type: 'string', description: 'e.g. map_view, chart, data_table' },
+        },
+        required: ['html', 'component_type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'show_notification',
+      description: 'Show toast notification.',
+      parameters: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          type: { type: 'string', enum: ['info', 'success', 'warning', 'error'] },
+        },
+        required: ['message', 'type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'remove_component',
+      description: 'Remove a UI component.',
+      parameters: {
+        type: 'object',
+        properties: {
+          component_id: { type: 'string' },
+        },
+        required: ['component_id'],
+      },
     },
   },
 ];

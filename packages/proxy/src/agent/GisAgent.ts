@@ -1,23 +1,29 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { randomUUID } from 'node:crypto';
 import { SYSTEM_PROMPT } from './systemPrompt.js';
 import { TOOL_DEFINITIONS } from './toolRegistry.js';
+import { createProviderFromEnv } from './llmProvider.js';
 import { geocode } from '../tools/geocoding.js';
 import { searchPOIs } from '../tools/poiSearch.js';
 import { calculateRoute } from '../tools/routing.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
-const client = new Anthropic();
-
-interface ConversationEntry {
-  role: 'user' | 'assistant';
-  content: string | Anthropic.ContentBlock[];
+let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
+function getProvider() {
+  if (!_provider) _provider = createProviderFromEnv();
+  return _provider;
 }
 
-const sessionMemories = new Map<string, ConversationEntry[]>();
-const MAX_MEMORY = 20;
+interface ChatMessage {
+  role: string;
+  content: any;
+  tool_calls?: any[];
+  tool_call_id?: string;
+}
 
-function getMemory(sessionId: string): ConversationEntry[] {
+const sessionMemories = new Map<string, ChatMessage[]>();
+const MAX_MEMORY = 6;
+
+function getMemory(sessionId: string): ChatMessage[] {
   if (!sessionMemories.has(sessionId)) {
     sessionMemories.set(sessionId, []);
   }
@@ -43,7 +49,6 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
     case 'render_component':
     case 'show_notification':
     case 'remove_component':
-      // UI tools — return the input as-is; the caller extracts them from tool_use blocks
       return JSON.stringify({ status: 'queued', ...input });
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
@@ -61,9 +66,8 @@ ${context.last_user_intent ? `Last intent: ${JSON.stringify(context.last_user_in
 
 User: ${query}`;
 
-  // Build messages from memory
-  const messages: Anthropic.MessageParam[] = [
-    ...memory.map(e => ({ role: e.role as 'user' | 'assistant', content: e.content as any })),
+  const messages: ChatMessage[] = [
+    ...memory,
     { role: 'user', content: contextBlock },
   ];
 
@@ -72,62 +76,74 @@ User: ${query}`;
   const notifications: AgentResponse['notifications'] = [];
   let agentMessage = '';
 
-  // Agentic loop: keep calling until no more tool_use
   let continueLoop = true;
   while (continueLoop) {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
-      system: SYSTEM_PROMPT,
-      tools: TOOL_DEFINITIONS,
-      messages,
-    });
+    const response = await getProvider().chat(SYSTEM_PROMPT, messages, TOOL_DEFINITIONS, 8192);
 
-    // Process content blocks
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    if (response.content) {
+      agentMessage += response.content;
+    }
 
-    for (const block of response.content) {
-      if (block.type === 'text') {
-        agentMessage += block.text;
-      } else if (block.type === 'tool_use') {
-        const result = await executeTool(block.name, block.input as Record<string, any>);
+    if (response.tool_calls.length > 0) {
+      // Add assistant message with tool calls to context
+      messages.push({
+        role: 'assistant',
+        content: response.content,
+        tool_calls: response.tool_calls.map(tc => ({
+          id: tc.id,
+          type: 'function' as const,
+          function: { name: tc.name, arguments: tc.arguments },
+        })),
+      });
 
-        // Extract UI actions from tool calls
-        if (block.name === 'render_component') {
-          const input = block.input as any;
+      for (const toolCall of response.tool_calls) {
+        let args: Record<string, any>;
+        try {
+          args = JSON.parse(toolCall.arguments);
+        } catch {
+          args = {};
+        }
+
+        const result = await executeTool(toolCall.name, args);
+
+        // Extract UI actions
+        if (toolCall.name === 'render_component') {
           const componentId = randomUUID().slice(0, 8);
           components.push({
             component_id: componentId,
-            html: input.html.replace(/\{\{COMPONENT_ID\}\}/g, componentId),
+            html: args.html.replace(/\{\{COMPONENT_ID\}\}/g, componentId),
             metadata: {
-              component_type: input.component_type || 'unknown',
+              component_type: args.component_type || 'unknown',
               sandbox_permissions: ['allow-scripts'],
-              intent_schema: input.intent_schema || {},
+              intent_schema: args.intent_schema || {},
             },
           });
-        } else if (block.name === 'show_notification') {
-          const input = block.input as any;
-          notifications.push({ type: input.type, message: input.message });
-        } else if (block.name === 'remove_component') {
-          removeComponents.push((block.input as any).component_id);
+        } else if (toolCall.name === 'show_notification') {
+          notifications.push({ type: args.type, message: args.message });
+        } else if (toolCall.name === 'remove_component') {
+          removeComponents.push(args.component_id);
         }
 
-        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: result,
+        });
       }
+    } else {
+      continueLoop = false;
     }
 
-    if (response.stop_reason === 'tool_use' && toolResults.length > 0) {
-      // Add assistant response and tool results, continue loop
-      messages.push({ role: 'assistant', content: response.content });
-      messages.push({ role: 'user', content: toolResults });
-    } else {
+    if (response.finish_reason !== 'tool_calls') {
       continueLoop = false;
     }
   }
 
-  // Update memory (keep last N entries)
+  // Update memory
   memory.push({ role: 'user', content: contextBlock });
-  memory.push({ role: 'assistant', content: agentMessage });
+  if (agentMessage) {
+    memory.push({ role: 'assistant', content: agentMessage });
+  }
   if (memory.length > MAX_MEMORY) {
     memory.splice(0, memory.length - MAX_MEMORY);
   }

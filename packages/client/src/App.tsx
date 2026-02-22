@@ -11,7 +11,12 @@ import type { UIComponentPayload } from '@ai-interface/shared';
 const PROXY_URL = 'http://localhost:3001';
 
 export function App() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('chat_messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [components, setComponents] = useState<UIComponentPayload[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +61,11 @@ export function App() {
     };
   }, []);
 
+  // Persist chat messages
+  useEffect(() => {
+    try { sessionStorage.setItem('chat_messages', JSON.stringify(messages)); } catch {}
+  }, [messages]);
+
   const addNotification = useCallback((type: Notification['type'], message: string) => {
     const id = crypto.randomUUID();
     setNotifications(prev => [...prev, { id, type, message }]);
@@ -64,6 +74,18 @@ export function App() {
   const dismissNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
+
+  const handleRemoveComponent = useCallback((id: string) => {
+    sandboxRegistryRef.current.unregister(id);
+    setComponents(prev => prev.filter(c => c.component_id !== id));
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    for (const c of components) {
+      sandboxRegistryRef.current.unregister(c.component_id);
+    }
+    setComponents([]);
+  }, [components]);
 
   const handleSend = useCallback(async (userMessage: string) => {
     if (!mcpClientRef.current) return;
@@ -116,13 +138,15 @@ export function App() {
     <div style={{
       display: 'flex', height: '100vh', width: '100vw',
       background: '#0a0a0a', color: '#e0e0e0',
+      overflow: 'hidden',
     }}>
       {/* Workspace (main area) */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {/* Status bar */}
         <div style={{
           padding: '6px 12px', borderBottom: '1px solid #333',
           fontSize: '11px', color: '#666', display: 'flex', gap: '16px',
+          flexShrink: 0,
         }}>
           <span>Status: {isConnected ? 'Connected' : 'Connecting...'}</span>
           <span>Components: {components.length}</span>
@@ -130,10 +154,12 @@ export function App() {
         </div>
 
         {/* Canvas */}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <WorkspaceCanvas
             components={components}
             sandboxRegistry={sandboxRegistryRef.current}
+            onRemoveComponent={handleRemoveComponent}
+            onClearAll={handleClearAll}
           />
         </div>
       </div>

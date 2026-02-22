@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT } from './systemPrompt.js';
 
 describe('agent setup', () => {
   it('has all required tool definitions', () => {
-    const toolNames = TOOL_DEFINITIONS.map(t => t.name);
+    const toolNames = TOOL_DEFINITIONS.map(t => t.function.name);
     expect(toolNames).toContain('geocode');
     expect(toolNames).toContain('search_pois');
     expect(toolNames).toContain('calculate_route');
@@ -22,10 +22,10 @@ describe('agent setup', () => {
   });
 
   it('render_component tool accepts html and intent_schema', () => {
-    const renderTool = TOOL_DEFINITIONS.find(t => t.name === 'render_component');
+    const renderTool = TOOL_DEFINITIONS.find(t => t.function.name === 'render_component');
     expect(renderTool).toBeDefined();
-    const props = (renderTool!.input_schema as any).properties;
-    expect(props.html).toBeDefined();
-    expect(props.intent_schema).toBeDefined();
+    const params = renderTool!.function.parameters as any;
+    expect(params.properties.html).toBeDefined();
+    expect(params.properties.intent_schema).toBeDefined();
   });
 });
