@@ -73,10 +73,14 @@ export function App() {
         sandboxRegistryRef.current.unregister(e.data.component_id);
         setComponents(prev => prev.filter(c => c.component_id !== e.data.component_id));
       }
+      if (e.data?.type === 'component_error' && e.data.component_id) {
+        console.warn(`Component ${e.data.component_id} error:`, e.data.error);
+        addNotification('warning', `Component error: ${e.data.error?.slice(0, 120)}`);
+      }
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, []);
+  }, [addNotification]);
 
   const addNotification = useCallback((type: Notification['type'], message: string) => {
     const id = crypto.randomUUID();
