@@ -35,52 +35,72 @@ function getMemory(sessionId: string): ChatMessage[] {
 }
 
 async function executeTool(name: string, input: Record<string, any>, sessionId: string): Promise<string> {
-  switch (name) {
-    case 'geocode': {
-      const results = await geocode(input.query);
-      return JSON.stringify(results);
+  try {
+    switch (name) {
+      case 'geocode': {
+        const results = await geocode(input.query);
+        return JSON.stringify(results);
+      }
+      case 'search_pois': {
+        const results = await searchPOIs(input.poi_type, input.lat, input.lon, input.radius);
+        return JSON.stringify(results);
+      }
+      case 'calculate_route': {
+        const result = await calculateRoute(
+          input.from_lat, input.from_lon, input.to_lat, input.to_lon, input.mode,
+        );
+        return JSON.stringify(result);
+      }
+      case 'web_search': {
+        const results = await webSearch(input.query, input.category);
+        if (Array.isArray(results) && results.length === 0) {
+          return JSON.stringify({ results: [], hint: 'No results found. Try broader search terms or a different category (general, news, science, images, files).' });
+        }
+        return JSON.stringify(results);
+      }
+      case 'fetch_page': {
+        const content = await fetchPage(input.url);
+        return JSON.stringify(content);
+      }
+      case 'execute_code': {
+        const payload = prepareCodeExec(input.code, input.language);
+        return JSON.stringify(payload);
+      }
+      case 'read_file': {
+        const result = await readSessionFile(sessionId, input.filename);
+        return JSON.stringify(result);
+      }
+      case 'write_file': {
+        const result = await writeSessionFile(sessionId, input.filename, input.content);
+        return JSON.stringify(result);
+      }
+      case 'list_session_files': {
+        const files = await listSessionFiles(sessionId);
+        return JSON.stringify(files);
+      }
+      case 'render_component':
+      case 'show_notification':
+      case 'remove_component':
+      case 'update_component':
+        return JSON.stringify({ status: 'queued', ...input });
+      default:
+        return JSON.stringify({ error: `Unknown tool: ${name}` });
     }
-    case 'search_pois': {
-      const results = await searchPOIs(input.poi_type, input.lat, input.lon, input.radius);
-      return JSON.stringify(results);
+  } catch (err: any) {
+    const msg = err.message || 'Unknown error';
+    if (msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
+      return JSON.stringify({ error: msg, hint: 'Network error. The URL may be invalid or the service is down.' });
     }
-    case 'calculate_route': {
-      const result = await calculateRoute(
-        input.from_lat, input.from_lon, input.to_lat, input.to_lon, input.mode,
-      );
-      return JSON.stringify(result);
+    if (msg.includes('403') || msg.includes('Forbidden')) {
+      return JSON.stringify({ error: msg, hint: 'Access denied. The site blocks automated requests. Try a different source.' });
     }
-    case 'web_search': {
-      const results = await webSearch(input.query, input.category);
-      return JSON.stringify(results);
+    if (msg.includes('404') || msg.includes('Not Found')) {
+      return JSON.stringify({ error: msg, hint: 'Page not found. The URL may be outdated. Try searching for the content instead.' });
     }
-    case 'fetch_page': {
-      const content = await fetchPage(input.url);
-      return JSON.stringify(content);
+    if (msg.includes('timeout') || msg.includes('Timeout') || msg.includes('ETIMEDOUT')) {
+      return JSON.stringify({ error: msg, hint: 'Request timed out. Try again or use a different source.' });
     }
-    case 'execute_code': {
-      const payload = prepareCodeExec(input.code, input.language);
-      return JSON.stringify(payload);
-    }
-    case 'read_file': {
-      const result = await readSessionFile(sessionId, input.filename);
-      return JSON.stringify(result);
-    }
-    case 'write_file': {
-      const result = await writeSessionFile(sessionId, input.filename, input.content);
-      return JSON.stringify(result);
-    }
-    case 'list_session_files': {
-      const files = await listSessionFiles(sessionId);
-      return JSON.stringify(files);
-    }
-    case 'render_component':
-    case 'show_notification':
-    case 'remove_component':
-    case 'update_component':
-      return JSON.stringify({ status: 'queued', ...input });
-    default:
-      return JSON.stringify({ error: `Unknown tool: ${name}` });
+    return JSON.stringify({ error: msg });
   }
 }
 
