@@ -20,6 +20,7 @@ export interface AgentContext {
   viewport?: { center: [number, number]; zoom: number; bounds?: object };
   conversation_summary?: string;
   last_user_intent?: { type: string; payload: Record<string, unknown> };
+  uploaded_files?: string[];
 }
 
 /** A UI component payload from the agent. */
