@@ -17,7 +17,7 @@ import { rateLimit } from './middleware/rateLimit.js';
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 // Health check
@@ -40,7 +40,7 @@ app.use('/api/mcp', uploadRouter);
 // File download (public, file path is the auth)
 app.use('/api', filesRouter);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Orchestration proxy running on port ${PORT}`);
 });
 

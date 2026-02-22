@@ -8,7 +8,7 @@ import { WorkspaceCanvas } from './components/WorkspaceCanvas.js';
 import { NotificationToast, type Notification } from './components/NotificationToast.js';
 import type { UIComponentPayload } from '@ai-interface/shared';
 
-const PROXY_URL = 'http://localhost:3001';
+const PROXY_URL = '';
 
 export function App() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {

@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT } from './systemPrompt.js';
 
 describe('agent setup', () => {
   it('has all required tool definitions', () => {
-    const toolNames = TOOL_DEFINITIONS.map(t => t.function.name);
+    const toolNames = TOOL_DEFINITIONS.map((t: any) => t.function.name);
     // GIS tools
     expect(toolNames).toContain('geocode');
     expect(toolNames).toContain('search_pois');
@@ -33,9 +33,9 @@ describe('agent setup', () => {
   });
 
   it('render_component tool accepts html', () => {
-    const renderTool = TOOL_DEFINITIONS.find(t => t.function.name === 'render_component');
+    const renderTool = TOOL_DEFINITIONS.find((t: any) => t.function.name === 'render_component');
     expect(renderTool).toBeDefined();
-    const params = renderTool!.function.parameters as any;
+    const params = (renderTool as any).function.parameters as any;
     expect(params.properties.html).toBeDefined();
     expect(params.properties.component_type).toBeDefined();
   });

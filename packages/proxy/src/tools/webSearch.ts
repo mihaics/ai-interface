@@ -24,7 +24,7 @@ export async function webSearch(
   });
 
   if (!response.ok) {
-    throw new Error(`SearXNG error: ${response.status}`);
+    return [{ title: 'Search error', url: '', snippet: `SearXNG returned HTTP ${response.status}`, engine: 'error' }];
   }
 
   const data = await response.json();

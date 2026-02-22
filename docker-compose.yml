@@ -1,0 +1,43 @@
+services:
+  redis:
+    image: valkey/valkey:8-alpine
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  searxng:
+    image: searxng/searxng:latest
+    depends_on:
+      - redis
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    restart: unless-stopped
+
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    depends_on:
+      - searxng
+    env_file: .env
+    environment:
+      SEARXNG_URL: http://searxng:8080
+      SESSION_FILE_DIR: /data/sessions
+      CORS_ORIGIN: http://localhost:8080
+    volumes:
+      - session-data:/data/sessions
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    depends_on:
+      - proxy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  session-data:

@@ -75,7 +75,7 @@ export function createAnthropicProvider(apiKey: string, model: string): LLMProvi
   return {
     async chat(systemPrompt, messages, tools, maxTokens) {
       // Convert OpenAI tool format → Anthropic tool format
-      const anthropicTools = tools.map(t => ({
+      const anthropicTools = tools.map((t: any) => ({
         name: t.function.name,
         description: t.function.description || '',
         input_schema: t.function.parameters as any,

@@ -128,7 +128,12 @@ User: ${query}`;
           args = {};
         }
 
-        const result = await executeTool(toolCall.name, args, context.session_id);
+        let result: string;
+        try {
+          result = await executeTool(toolCall.name, args, context.session_id);
+        } catch (err: any) {
+          result = JSON.stringify({ error: err.message || 'Tool execution failed' });
+        }
 
         // Extract UI actions
         if (toolCall.name === 'render_component') {

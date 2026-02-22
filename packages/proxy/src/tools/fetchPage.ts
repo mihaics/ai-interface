@@ -22,7 +22,15 @@ export async function fetchPage(url: string): Promise<PageContent> {
   });
 
   if (!response.ok) {
-    throw new Error(`Fetch error: ${response.status} ${response.statusText}`);
+    return {
+      title: url,
+      content: `Failed to fetch: HTTP ${response.status} ${response.statusText}`,
+      text_content: `Failed to fetch: HTTP ${response.status} ${response.statusText}`,
+      excerpt: '',
+      byline: '',
+      length: 0,
+      mime_type: 'error',
+    };
   }
 
   const contentType = response.headers.get('content-type') || '';
@@ -59,12 +67,12 @@ export async function fetchPage(url: string): Promise<PageContent> {
   }
 
   return {
-    title: article.title,
-    content: article.content.slice(0, 50_000),
-    text_content: article.textContent.slice(0, 50_000),
+    title: article.title ?? url,
+    content: (article.content ?? '').slice(0, 50_000),
+    text_content: (article.textContent ?? '').slice(0, 50_000),
     excerpt: article.excerpt || '',
     byline: article.byline || '',
-    length: article.length,
+    length: article.length ?? 0,
     mime_type: 'text/html',
   };
 }
