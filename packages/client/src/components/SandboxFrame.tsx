@@ -44,7 +44,7 @@ export function SandboxFrame({ component, onLoad, onError }: SandboxFrameProps) 
         height: '100%',
         border: 'none',
         borderRadius: '8px',
-        backgroundColor: '#1a1a2e',
+        backgroundColor: '#0a0a1a',
       }}
     />
   );
@@ -74,14 +74,118 @@ function buildSrcDoc(component: UIComponentPayload): string {
   }
   </script>
   <style>
+    :root {
+      /* Backgrounds */
+      --bg-base: #0a0a1a;
+      --bg-surface: #141428;
+      --bg-elevated: #1e1e3a;
+      /* Text */
+      --text-primary: #e8e8f0;
+      --text-secondary: #9898b0;
+      --text-muted: #585870;
+      /* Accents */
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      /* States */
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --error: #f87171;
+      /* UI */
+      --border: rgba(255, 255, 255, 0.08);
+      --radius: 8px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+      /* Spacing */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 1rem;
+      --space-4: 1.5rem;
+      --space-5: 2rem;
+      --space-6: 3rem;
+      /* Fonts */
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; overflow: auto; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      overflow: auto;
+      line-height: 1.5;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
     #root { width: 100vw; height: 100vh; }
+
+    /* Utility classes */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-3);
+    }
+
+    /* Loading spinner */
+    #_loading {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2147483647;
+      background: var(--bg-base);
+    }
+    #_loading::after {
+      content: '';
+      width: 28px; height: 28px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: _spin 0.7s linear infinite;
+    }
+    @keyframes _spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+  <div id="_loading"></div>
   <script>var COMPONENT_ID = '${component.component_id}';</script>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      try {
+        parent.postMessage({
+          type: 'component_error',
+          component_id: COMPONENT_ID,
+          error: String(msg),
+          stack: err && err.stack ? err.stack : ''
+        }, '*');
+      } catch(e) {}
+    };
+    window.onunhandledrejection = function(ev) {
+      var r = ev.reason || {};
+      try {
+        parent.postMessage({
+          type: 'component_error',
+          component_id: COMPONENT_ID,
+          error: r.message || String(r),
+          stack: r.stack || ''
+        }, '*');
+      } catch(e) {}
+    };
+  </script>
   ${component.html}
+  <script>requestAnimationFrame(function(){setTimeout(function(){var l=document.getElementById('_loading');if(l)l.remove();},100)});</script>
 </body>
 </html>`;
 }
