@@ -18,6 +18,7 @@ function getProvider() {
   return _provider;
 }
 
+// Three-state singleton: undefined = uninitialized, null = disabled, LLMProvider = active
 let _augmenterProvider: LLMProvider | null | undefined = undefined;
 function getAugmenterProvider(): LLMProvider | null {
   if (_augmenterProvider === undefined) _augmenterProvider = createAugmenterProviderFromEnv();
@@ -140,9 +141,14 @@ export async function processQuery(request: AgentQueryRequest): Promise<AgentRes
   // Query augmentation
   let augment: AugmentResult | null = null;
   const augmenterProvider = getAugmenterProvider();
+  const AUGMENTER_TIMEOUT_MS = 3000;
+
   if (augmenterProvider) {
-    augment = await augmentQuery(query, context, augmenterProvider);
-    if (augment.route === 'direct' && augment.direct_response) {
+    augment = await Promise.race([
+      augmentQuery(query, context, augmenterProvider),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), AUGMENTER_TIMEOUT_MS)),
+    ]) as AugmentResult | null;
+    if (augment?.route === 'direct' && augment.direct_response) {
       memory.push({ role: 'user', content: query });
       memory.push({ role: 'assistant', content: augment.direct_response });
       return { message: augment.direct_response };
