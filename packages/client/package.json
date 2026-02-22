@@ -12,7 +12,8 @@
   "dependencies": {
     "@ai-interface/shared": "*",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-grid-layout": "^2.2.2"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
