@@ -1,11 +1,116 @@
-use_default_settings: true
+use_default_settings:
+  engines:
+    remove:
+      - google
+      - google images
+      - google news
+      - google videos
+      - google scholar
+      - google play apps
+      - google play movies
+      - duckduckgo
+      - duckduckgo images
+      - duckduckgo videos
+      - duckduckgo news
+      - duckduckgo weather
+      - qwant
+      - qwant news
+      - qwant images
+      - qwant videos
+      - startpage
+      - yahoo
+      - yahoo news
+
+general:
+  instance_name: "ai-interface-search"
+  debug: false
+
 server:
   secret_key: ""
   limiter: false
   image_proxy: false
+  method: "GET"
+
 search:
+  safe_search: 0
+  default_lang: "en"
+  autocomplete: ""
   formats:
     - html
     - json
-redis:
+  ban_time_on_fail: 5
+  max_ban_time_on_fail: 120
+  suspended_times:
+    SearxEngineCaptcha: 600
+    SearxEngineAccessDenied: 300
+    SearxEngineTooManyRequests: 120
+    cf_SearxEngineCaptcha: 3600
+    cf_SearxEngineAccessDenied: 600
+    recaptcha_SearxEngineCaptcha: 3600
+
+outgoing:
+  request_timeout: 5.0
+  max_request_timeout: 15.0
+  useragent_suffix: ""
+  pool_connections: 100
+  pool_maxsize: 20
+  enable_http2: true
+  keepalive_expiry: 5.0
+  retries: 1
+
+valkey:
   url: "redis://redis:6379/0"
+
+engines:
+  - name: brave
+    disabled: false
+    weight: 1.2
+    timeout: 6.0
+
+  - name: bing
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+
+  - name: mojeek
+    disabled: false
+    weight: 0.8
+    timeout: 5.0
+
+  - name: wikipedia
+    disabled: false
+    weight: 1.0
+    timeout: 3.0
+
+  - name: wikidata
+    disabled: false
+    timeout: 3.0
+
+  - name: github
+    disabled: false
+    timeout: 3.0
+
+  - name: stackoverflow
+    disabled: false
+    timeout: 3.0
+
+  - name: archwiki
+    engine: archlinux
+    shortcut: aw
+    disabled: false
+    timeout: 3.0
+
+  - name: mdn
+    disabled: false
+    timeout: 3.0
+
+  - name: currency
+    disabled: false
+
+  - name: bing news
+    disabled: false
+    timeout: 5.0
+
+  - name: bing images
+    disabled: false
+    timeout: 5.0
