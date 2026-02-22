@@ -1,6 +1,7 @@
 {
   "name": "ai-interface",
   "private": true,
+  "license": "Apache-2.0",
   "workspaces": ["packages/*"],
   "scripts": {
     "dev": "concurrently \"npm run dev:proxy\" \"npm run dev:client\"",
