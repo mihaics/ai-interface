@@ -6,6 +6,7 @@ import { geocode } from '../tools/geocoding.js';
 import { searchPOIs } from '../tools/poiSearch.js';
 import { calculateRoute } from '../tools/routing.js';
 import { webSearch } from '../tools/webSearch.js';
+import { fetchPage } from '../tools/fetchPage.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
 let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
@@ -50,6 +51,10 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
     case 'web_search': {
       const results = await webSearch(input.query, input.category);
       return JSON.stringify(results);
+    }
+    case 'fetch_page': {
+      const content = await fetchPage(input.url);
+      return JSON.stringify(content);
     }
     case 'render_component':
     case 'show_notification':

@@ -109,4 +109,18 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'fetch_page',
+      description: 'Fetch a web page and extract readable content.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', description: 'URL to fetch' },
+        },
+        required: ['url'],
+      },
+    },
+  },
 ];

@@ -13,14 +13,17 @@
   "dependencies": {
     "@ai-interface/shared": "*",
     "@anthropic-ai/sdk": "^0.78.0",
+    "@mozilla/readability": "^0.6.0",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^5.0.0",
+    "jsdom": "^26.1.0",
     "openai": "^6.22.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jsdom": "^27.0.0",
     "tsx": "^4.19.0",
     "vitest": "^3.0.0"
   }
