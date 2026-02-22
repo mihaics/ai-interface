@@ -114,7 +114,8 @@ export async function augmentQuery(
     const messages = buildAugmenterInput(query, context);
     const response = await provider.chat(AUGMENTER_PROMPT, messages, [], 512);
     return parseAugmenterResponse(response.content, query);
-  } catch {
+  } catch (err) {
+    console.warn('Augmenter failed, using fallback:', err instanceof Error ? err.message : err);
     return fallback;
   }
 }

@@ -39,8 +39,7 @@ export function createOpenAIProvider(baseURL: string, apiKey: string, model: str
             model,
             max_completion_tokens: maxTokens,
             messages: allMessages,
-            tools,
-            tool_choice: 'auto',
+            ...(tools.length > 0 ? { tools, tool_choice: 'auto' as const } : {}),
           });
           const choice = response.choices[0];
           if (!choice) return { content: null, tool_calls: [], finish_reason: 'stop' };
@@ -88,7 +87,7 @@ export function createAnthropicProvider(apiKey: string, model: string): LLMProvi
         model,
         max_tokens: maxTokens,
         system: systemPrompt,
-        tools: anthropicTools,
+        ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
         messages: anthropicMessages,
       });
 
