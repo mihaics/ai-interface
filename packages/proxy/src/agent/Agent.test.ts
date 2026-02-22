@@ -16,7 +16,9 @@ describe('agent setup', () => {
     expect(toolNames).toContain('execute_code');
     expect(toolNames).toContain('read_file');
     expect(toolNames).toContain('write_file');
-    // New tools will be added in Tasks 4-5; count updated then
+    expect(toolNames).toContain('list_session_files');
+    expect(toolNames).toContain('update_component');
+    expect(toolNames).toHaveLength(13);
   });
 
   it('system prompt covers design system and decision trees', () => {

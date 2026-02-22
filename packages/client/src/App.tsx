@@ -66,6 +66,15 @@ export function App() {
     try { sessionStorage.setItem('chat_messages', JSON.stringify(messages)); } catch {}
   }, [messages]);
 
+  const addNotification = useCallback((type: Notification['type'], message: string) => {
+    const id = crypto.randomUUID();
+    setNotifications(prev => [...prev, { id, type, message }]);
+  }, []);
+
+  const dismissNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
   // Auto-remove code execution windows that error out
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
@@ -81,15 +90,6 @@ export function App() {
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
   }, [addNotification]);
-
-  const addNotification = useCallback((type: Notification['type'], message: string) => {
-    const id = crypto.randomUUID();
-    setNotifications(prev => [...prev, { id, type, message }]);
-  }, []);
-
-  const dismissNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
 
   const handleRemoveComponent = useCallback((id: string) => {
     sandboxRegistryRef.current.unregister(id);

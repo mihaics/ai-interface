@@ -133,6 +133,7 @@ export async function processQuery(request: AgentQueryRequest): Promise<AgentRes
   const contextBlock = `Session: ${context.session_id}
 Active components: ${context.active_components.join(', ') || 'none'}
 ${sessionCtx.uploadedFiles.length > 0 ? `Uploaded files: ${sessionCtx.uploadedFiles.join(', ')}` : ''}
+${sessionCtx.componentTypes.length > 0 ? `Previously rendered: ${sessionCtx.componentTypes.join(', ')}` : ''}
 ${context.viewport ? `Viewport: center=[${context.viewport.center}], zoom=${context.viewport.zoom}` : ''}
 ${context.last_user_intent ? `Last intent: ${JSON.stringify(context.last_user_intent)}` : ''}
 
@@ -169,7 +170,7 @@ User: ${query}`;
         })),
       });
 
-      // Execute all tool calls in parallel
+      // Execute all tool calls in parallel (assumes LLM doesn't issue conflicting file ops in one batch)
       const toolResults = await Promise.all(
         response.tool_calls.map(async (toolCall) => {
           let args: Record<string, any>;
