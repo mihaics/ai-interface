@@ -134,6 +134,25 @@ export function App() {
     }
   }, [addNotification]);
 
+  const handleUpload = useCallback(async (file: File) => {
+    if (!sessionManagerRef.current) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const token = sessionManagerRef.current.getToken();
+      const res = await fetch(`${PROXY_URL}/api/mcp/upload`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token || '' },
+        body: formData,
+      });
+      const data = await res.json();
+      addNotification('success', `Uploaded: ${data.filename}`);
+      handleSend(`I uploaded a file: ${data.filename}`);
+    } catch (err: any) {
+      addNotification('error', `Upload failed: ${err.message}`);
+    }
+  }, [addNotification, handleSend]);
+
   return (
     <div style={{
       display: 'flex', height: '100vh', width: '100vw',
@@ -169,6 +188,7 @@ export function App() {
         <ChatPanel
           messages={messages}
           onSend={handleSend}
+          onUpload={handleUpload}
           isLoading={isLoading}
         />
       </div>

@@ -9,12 +9,13 @@ interface ChatMessage {
 interface ChatPanelProps {
   messages: ChatMessage[];
   onSend: (message: string) => void;
+  onUpload?: (file: File) => void;
   isLoading: boolean;
 }
 
 export type { ChatMessage };
 
-export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
+export function ChatPanel({ messages, onSend, onUpload, isLoading }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,10 +31,10 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
   };
 
   const suggestions = [
+    'Search for latest AI news',
     'Find cafes in Amsterdam',
-    'Show hospitals near Paris',
-    'Route from Berlin to Munich',
-    'Find parks in London',
+    'Analyze this CSV data',
+    'Explain quantum computing',
   ];
 
   return (
@@ -46,7 +47,7 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
         padding: '12px 16px', borderBottom: '1px solid #333',
         fontSize: '14px', fontWeight: 'bold', color: '#e0e0e0',
       }}>
-        AI Interface
+        AI Assistant
       </div>
 
       {/* Messages */}
@@ -56,7 +57,7 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
       }}>
         {messages.length === 0 && (
           <div style={{ color: '#666', fontSize: '13px', padding: '8px' }}>
-            Hello! I'm your GIS assistant. I'll generate interactive map visualizations based on your requests.
+            Hello! I can search the web, show maps, run code, analyze data, and more. What would you like to do?
           </div>
         )}
         {messages.map((msg, i) => (
@@ -111,7 +112,7 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Ask me anything about maps..."
+          placeholder="Ask me anything..."
           disabled={isLoading}
           style={{
             flex: 1, padding: '8px 12px', borderRadius: '8px',
@@ -119,6 +120,23 @@ export function ChatPanel({ messages, onSend, isLoading }: ChatPanelProps) {
             fontSize: '13px', outline: 'none',
           }}
         />
+        <label style={{
+          padding: '8px 12px', borderRadius: '8px', border: '1px solid #444',
+          background: '#1a1a1a', color: '#888', fontSize: '13px',
+          cursor: 'pointer', display: 'flex', alignItems: 'center',
+        }}>
+          <input
+            type="file"
+            style={{ display: 'none' }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              onUpload?.(file);
+              e.target.value = '';
+            }}
+          />
+          Upload
+        </label>
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
