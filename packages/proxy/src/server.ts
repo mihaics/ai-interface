@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { sessionRouter } from './routes/session.js';
+import { mcpRouter } from './routes/mcp.js';
 import { validateSession } from './middleware/validateSession.js';
 import { rateLimit } from './middleware/rateLimit.js';
 
@@ -21,10 +22,8 @@ app.use('/api', sessionRouter);
 // Protected routes require valid session token
 app.use('/api/mcp', validateSession, rateLimit);
 
-// MCP agent endpoint (placeholder — Task 9 fills this in)
-app.post('/api/mcp/query', (req, res) => {
-  res.json({ message: 'MCP endpoint placeholder', components: [], notifications: [] });
-});
+// MCP agent endpoint
+app.use('/api/mcp', mcpRouter);
 
 app.listen(PORT, () => {
   console.log(`Orchestration proxy running on port ${PORT}`);
