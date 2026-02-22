@@ -123,4 +123,19 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'execute_code',
+      description: 'Execute Python or JavaScript code. Results shown in browser via Pyodide (Python) or direct eval (JS).',
+      parameters: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', description: 'Code to execute' },
+          language: { type: 'string', enum: ['python', 'javascript'], description: 'Language (default python)' },
+        },
+        required: ['code'],
+      },
+    },
+  },
 ];

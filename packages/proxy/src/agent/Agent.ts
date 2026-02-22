@@ -7,6 +7,7 @@ import { searchPOIs } from '../tools/poiSearch.js';
 import { calculateRoute } from '../tools/routing.js';
 import { webSearch } from '../tools/webSearch.js';
 import { fetchPage } from '../tools/fetchPage.js';
+import { prepareCodeExec } from '../tools/codeExec.js';
 import type { AgentQueryRequest, AgentResponse, UIComponentPayload } from '@ai-interface/shared';
 
 let _provider: ReturnType<typeof createProviderFromEnv> | null = null;
@@ -55,6 +56,10 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
     case 'fetch_page': {
       const content = await fetchPage(input.url);
       return JSON.stringify(content);
+    }
+    case 'execute_code': {
+      const payload = prepareCodeExec(input.code, input.language);
+      return JSON.stringify(payload);
     }
     case 'render_component':
     case 'show_notification':
@@ -132,6 +137,19 @@ User: ${query}`;
           notifications.push({ type: args.type, message: args.message });
         } else if (toolCall.name === 'remove_component') {
           removeComponents.push(args.component_id);
+        } else if (toolCall.name === 'execute_code') {
+          const payload = JSON.parse(result);
+          const componentId = randomUUID().slice(0, 8);
+          const html = buildCodeExecHtml(payload.code, payload.language);
+          components.push({
+            component_id: componentId,
+            html,
+            metadata: {
+              component_type: 'code_output',
+              sandbox_permissions: ['allow-scripts'],
+              intent_schema: {},
+            },
+          });
         }
 
         messages.push({
@@ -164,4 +182,62 @@ User: ${query}`;
     remove_components: removeComponents.length > 0 ? removeComponents : undefined,
     notifications: notifications.length > 0 ? notifications : undefined,
   };
+}
+
+function buildCodeExecHtml(code: string, language: string): string {
+  const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+  if (language === 'javascript') {
+    return `<div style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
+<h3 style="color:#888;margin:0 0 8px">JavaScript</h3>
+<pre style="background:#111;padding:12px;border-radius:4px;margin:0 0 8px;overflow-x:auto"><code>${escaped}</code></pre>
+<h3 style="color:#888;margin:0 0 8px">Output</h3>
+<pre id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto"></pre>
+<script>
+const _log = [];
+const _origLog = console.log;
+console.log = (...a) => { _log.push(a.map(String).join(' ')); _origLog(...a); };
+try {
+  const _result = eval(${JSON.stringify(code)});
+  if (_result !== undefined) _log.push(String(_result));
+} catch(e) { _log.push('Error: ' + e.message); }
+document.getElementById('output').textContent = _log.join('\\n');
+</script></div>`;
+  }
+
+  // Python via Pyodide
+  return `<div style="background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:16px;width:100vw;height:100vh;overflow:auto">
+<h3 style="color:#888;margin:0 0 8px">Python</h3>
+<pre style="background:#111;padding:12px;border-radius:4px;margin:0 0 8px;overflow-x:auto"><code>${escaped}</code></pre>
+<h3 style="color:#888;margin:0 0 8px">Output</h3>
+<pre id="output" style="background:#111;padding:12px;border-radius:4px;color:#4ade80;overflow-x:auto">Loading Pyodide...</pre>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
+<script>
+(async () => {
+  try {
+    const pyodide = await loadPyodide();
+    pyodide.setStdout({ batched: (text) => {
+      const el = document.getElementById('output');
+      if (el.textContent === 'Loading Pyodide...') el.textContent = '';
+      el.textContent += text + '\\n';
+    }});
+    pyodide.setStderr({ batched: (text) => {
+      const el = document.getElementById('output');
+      el.textContent += text + '\\n';
+    }});
+    const result = await pyodide.runPythonAsync(${JSON.stringify(code)});
+    if (result !== undefined && result !== null) {
+      const el = document.getElementById('output');
+      if (el.textContent === 'Loading Pyodide...') el.textContent = '';
+      el.textContent += String(result);
+    }
+    if (document.getElementById('output').textContent === 'Loading Pyodide...') {
+      document.getElementById('output').textContent = '(no output)';
+    }
+  } catch(e) {
+    document.getElementById('output').textContent = 'Error: ' + e.message;
+  }
+})();
+</script></div>`;
 }
