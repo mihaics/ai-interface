@@ -4,7 +4,7 @@ import { TOOL_DEFINITIONS } from './toolRegistry.js';
 import { createProviderFromEnv, createAugmenterProviderFromEnv, type LLMProvider } from './llmProvider.js';
 import { augmentQuery, type AugmentResult } from './queryAugmenter.js';
 import { geocode } from '../tools/geocoding.js';
-import { searchPOIs } from '../tools/poiSearch.js';
+import { searchOSM } from '../tools/osmSearch.js';
 import { calculateRoute } from '../tools/routing.js';
 import { webSearch } from '../tools/webSearch.js';
 import { fetchPage } from '../tools/fetchPage.js';
@@ -63,8 +63,10 @@ async function executeTool(name: string, input: Record<string, any>, sessionId: 
         const results = await geocode(input.query);
         return JSON.stringify(results);
       }
-      case 'search_pois': {
-        const results = await searchPOIs(input.poi_type, input.lat, input.lon, input.radius);
+      case 'search_osm': {
+        const results = await searchOSM(
+          input.key, input.value, input.area_name, input.lat, input.lon, input.radius
+        );
         return JSON.stringify(results);
       }
       case 'calculate_route': {
@@ -101,6 +103,7 @@ async function executeTool(name: string, input: Record<string, any>, sessionId: 
         return JSON.stringify(files);
       }
       case 'render_component':
+        return JSON.stringify({ status: 'queued', component_type: input.component_type || 'unknown' });
       case 'show_notification':
       case 'remove_component':
       case 'update_component':

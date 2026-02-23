@@ -18,17 +18,19 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'search_pois',
-      description: 'Find points of interest near coordinates using Overpass API. Use after geocode to get the lat/lon.',
+      name: 'search_osm',
+      description: 'Search OpenStreetMap for features (cities, towns, peaks, cafes, etc.). Provides real GIS data anchored to coordinates.',
       parameters: {
         type: 'object',
         properties: {
-          poi_type: { type: 'string', description: 'OSM amenity type (cafe, restaurant, hospital)' },
-          lat: { type: 'number' },
-          lon: { type: 'number' },
-          radius: { type: 'number', description: 'Meters (default 1000)' },
+          key: { type: 'string', description: 'OSM key (e.g. place, amenity, natural, tourism)' },
+          value: { type: 'string', description: 'OSM value (e.g. city, cafe, peak, museum)' },
+          area_name: { type: 'string', description: 'Optional area name (e.g. "France", "California"). If provided, lat/lon are ignored.' },
+          lat: { type: 'number', description: 'Center latitude' },
+          lon: { type: 'number', description: 'Center longitude' },
+          radius: { type: 'number', description: 'Search radius in meters (default 5000)' },
         },
-        required: ['poi_type', 'lat', 'lon'],
+        required: ['key', 'value'],
       },
     },
   },
@@ -54,7 +56,7 @@ export const TOOL_DEFINITIONS: OpenAI.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'render_component',
-      description: 'Render interactive HTML/JS/CSS in a sandboxed iframe. Use CSS design system variables (--bg-base, --accent, etc.). Import map available: three, chart.js/auto, d3, mermaid, marked, lodash, canvas-confetti. Use <script type="module"> for ESM. For Leaflet maps, use classic <script> from unpkg CDN.',
+      description: 'Render interactive HTML/JS/CSS in a sandboxed iframe. Use CSS design system variables (--bg-base, --accent, etc.). Import map available: three, chart.js/auto, d3, mermaid, marked, lodash, canvas-confetti. Use <script type="module"> for ESM. For Leaflet maps, use classic <script> from unpkg CDN. For 3D globes, use plain Three.js (SphereGeometry + texture), not three-globe.',
       parameters: {
         type: 'object',
         properties: {

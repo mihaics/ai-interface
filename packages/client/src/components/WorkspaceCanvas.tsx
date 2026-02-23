@@ -5,9 +5,9 @@ import type { SandboxRegistry } from '../core/SandboxRegistry.js';
 
 const MIN_W = 200;
 const MIN_H = 150;
-const CASCADE_OFFSET = 30;
-const DEFAULT_W = 600;
-const DEFAULT_H = 450;
+const CASCADE_OFFSET = 36;
+const DEFAULT_W = 900;
+const DEFAULT_H = 700;
 const HANDLE_SIZE = 6;
 
 interface WindowState {
@@ -55,10 +55,11 @@ export function WorkspaceCanvas({ components, sandboxRegistry, onRemoveComponent
     const container = containerRef.current;
     const vw = container?.clientWidth || 1200;
     const vh = container?.clientHeight || 800;
-    const w = Math.min(DEFAULT_W, Math.floor(vw * 0.5));
-    const h = Math.min(DEFAULT_H, Math.floor(vh * 0.55));
-    const cascadeX = CASCADE_OFFSET + (index % 8) * CASCADE_OFFSET;
-    const cascadeY = CASCADE_OFFSET + (index % 8) * CASCADE_OFFSET;
+    const w = Math.min(DEFAULT_W, Math.floor(vw * 0.7));
+    const h = Math.min(DEFAULT_H, Math.floor(vh * 0.75));
+    const slot = index % 6;
+    const cascadeX = 20 + slot * CASCADE_OFFSET;
+    const cascadeY = 20 + slot * CASCADE_OFFSET;
     return {
       id, x: cascadeX, y: cascadeY, w, h,
       z: zCounterRef.current++, maximized: false, minimized: false,
@@ -215,7 +216,7 @@ export function WorkspaceCanvas({ components, sandboxRegistry, onRemoveComponent
     >
       {/* Clear All button */}
       <div style={{
-        position: 'absolute', top: 4, right: 8, zIndex: 999999,
+        position: 'absolute', top: 4, left: 8, zIndex: 999999,
       }}>
         <button
           onClick={onClearAll}

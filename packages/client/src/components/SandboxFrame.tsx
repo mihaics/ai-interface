@@ -61,8 +61,8 @@ function buildSrcDoc(component: UIComponentPayload): string {
   <script type="importmap">
   {
     "imports": {
-      "three": "https://esm.sh/three",
-      "three/": "https://esm.sh/three/",
+      "three": "https://esm.sh/three@0.170.0",
+      "three/": "https://esm.sh/three@0.170.0/",
       "chart.js": "https://esm.sh/chart.js",
       "chart.js/auto": "https://esm.sh/chart.js/auto",
       "d3": "https://esm.sh/d3",

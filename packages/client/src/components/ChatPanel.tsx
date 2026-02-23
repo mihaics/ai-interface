@@ -17,50 +17,50 @@ interface ChatPanelProps {
 export type { ChatMessage };
 
 const INITIAL_SUGGESTIONS = [
-  'Search for latest AI news',
-  'Show a 3D globe with major cities',
-  'Build an interactive periodic table',
-  'Find cafes near me on a map',
+  'Search for latest AI news and show a summary',
+  'Show a 3D globe with the 10 largest capitals',
+  'Build a unit converter (length, weight, temperature)',
+  'Map cafes within 1km of the center of Timișoara',
 ];
 
 const CONTEXTUAL_SUGGESTIONS: Record<string, string[]> = {
   map_view: [
-    'Add nearby restaurants to the map',
-    'Calculate a walking route',
-    'Show public transport stops',
+    'Add the 5 nearest restaurants to the map',
+    'Calculate a walking route between two markers',
+    'Show bus stops within 500m',
   ],
   data_table: [
-    'Create a chart from this data',
-    'Sort and filter this table',
-    'Analyze trends in this data',
+    'Create a bar chart from the top 10 rows',
+    'Sort this table by the largest column',
+    'Summarize key stats from this data',
   ],
   chart: [
-    'Change the chart type',
-    'Compare with another dataset',
+    'Switch this to a line chart',
+    'Highlight the top 3 values',
     'Explain what this chart shows',
   ],
   web_page: [
-    'Summarize this article',
-    'Find similar articles',
-    'Search for more on this topic',
+    'Summarize this article in 3 bullet points',
+    'Search for a different perspective on this topic',
+    'Extract the key facts from this page',
   ],
   code_output: [
-    'Add a visualization to this',
-    'Optimize this code',
-    'Run with different parameters',
+    'Plot the results as a chart',
+    'Optimize this code for speed',
+    'Run with different input values',
   ],
   pdf_viewer: [
-    'Summarize this PDF',
-    'Extract key points',
-    'Search for related documents',
+    'Summarize this PDF in 5 bullet points',
+    'Extract the main conclusions',
+    'Search for related papers on this topic',
   ],
 };
 
 const GENERIC_FOLLOWUPS = [
-  'Show this as a different visualization',
-  'Search the web for more info',
-  'Write Python code to analyze this',
-  'Fetch and display a web page',
+  'Show this as a different chart type',
+  'Search the web for more context',
+  'Run a quick Python analysis on this',
+  'Compare these results side by side',
 ];
 
 function getSuggestions(componentTypes: string[]): string[] {

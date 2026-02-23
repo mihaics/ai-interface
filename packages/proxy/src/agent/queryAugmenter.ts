@@ -24,7 +24,7 @@ For trivial queries (greetings, thanks, simple math, identity questions, meta-co
 For everything else, return:
 {"route":"agent","intent":"<category>","entities":{<key-value pairs>},"augmented_query":"<enriched query>","suggested_tools":[<tool names>],"complexity":"<level>"}
 
-Intent categories: data_analysis, web_search, map_geo, interactive_app, code_execution, file_operation, general_knowledge, comparison
+Intent categories: data_analysis, web_search, map_geo, gis_3d, interactive_app, code_execution, file_operation, general_knowledge, comparison
 
 Available tools: web_search, fetch_page, execute_code, render_component, geocode, search_pois, calculate_route, read_file, write_file, list_session_files
 

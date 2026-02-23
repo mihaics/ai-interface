@@ -172,6 +172,14 @@ export function createProviderFromEnv(): LLMProvider {
     return createAnthropicProvider(apiKey, model);
   }
 
+  if (provider === 'cerebras') {
+    const apiKey = process.env.CEREBRAS_API_KEY;
+    if (!apiKey) throw new Error('CEREBRAS_API_KEY required when LLM_PROVIDER=cerebras');
+    const model = process.env.LLM_MODEL || 'zai-glm-4.7';
+    console.log(`LLM provider: Cerebras (${model})`);
+    return createOpenAIProvider('https://api.cerebras.ai/v1', apiKey, model);
+  }
+
   // openai-compatible (Ollama, OpenAI, etc.)
   const baseURL = process.env.LLM_BASE_URL || 'http://localhost:11434/v1';
   const apiKey = process.env.LLM_API_KEY || 'ollama';
@@ -192,6 +200,14 @@ export function createAugmenterProviderFromEnv(): LLMProvider | null {
     const model = process.env.AUGMENTER_MODEL || 'claude-haiku-4-5-20251001';
     console.log(`Augmenter provider: Anthropic (${model})`);
     return createAnthropicProvider(apiKey, model);
+  }
+
+  if (provider === 'cerebras') {
+    const apiKey = process.env.CEREBRAS_API_KEY;
+    if (!apiKey) return null;
+    const model = process.env.AUGMENTER_MODEL || 'qwen-3-32b';
+    console.log(`Augmenter provider: Cerebras (${model})`);
+    return createOpenAIProvider('https://api.cerebras.ai/v1', apiKey, model);
   }
 
   // openai-compatible
